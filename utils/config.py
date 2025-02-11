@@ -11,6 +11,7 @@ load_dotenv(dotenv_path)
 Base = declarative_base()
 
 DATABASE_URL = os.getenv("DATABASE_URL")
+SECRET_KEY = os.getenv("SECRET_KEY")
 
 engine = create_engine(DATABASE_URL, echo=False)
 Session = sessionmaker(bind=engine)
