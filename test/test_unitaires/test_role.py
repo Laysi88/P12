@@ -6,7 +6,17 @@ from model.role import Role
     "role_name, expected_permissions",
     [
         ("gestion", {"create_user", "read_user", "update_user", "delete_user"}),
-        ("commercial", {}),
+        (
+            "commercial",
+            {
+                "create_client",
+                "read_client",
+                "update_client",
+                "create_contact",
+                "read_contact",
+                "update_contact",
+            },
+        ),
         ("support", {}),
     ],
 )

@@ -18,7 +18,14 @@ class Role(Base):
                 "update_user",
                 "delete_user",
             },
-            "commercial": {},
+            "commercial": {
+                "create_client",
+                "read_client",
+                "update_client",
+                "create_contact",
+                "read_contact",
+                "update_contact",
+            },
             "support": {},
         }
         return role_permissions.get(self.name, set())

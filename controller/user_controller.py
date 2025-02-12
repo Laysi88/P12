@@ -2,26 +2,16 @@ from utils.config import Session as DBSession
 from model.user import User
 from model.role import Role
 from view.user_view import UserView
+from controller.base_controller import BaseController
 
 
-class UserController:
+class UserController(BaseController):
     def __init__(self, user):
         """Initialise le contrôleur avec l'utilisateur connecté."""
-        self.session = DBSession()
+        session = DBSession()
+        super().__init__(user, session)
         self.model = User
         self.view = UserView()
-        self.user = user
-
-    def check_permission(self, action):
-        """Vérifie si l'utilisateur connecté a la permission d'effectuer une action."""
-        print(f"🔍 Vérification permission : action={action}, rôle={self.user.role.name if self.user.role else None}")
-        if self.user.role and self.user.role.has_permission(action):
-            print("✅ Permission accordée")
-            return True
-        else:
-            print("⛔ Permission refusée")
-            self.view.display_error_message(f"⛔ Accès refusé : Vous n'avez pas la permission '{action}'.")
-            return False
 
     def create_user(self):
         """Création d'un nouvel utilisateur (nécessite 'create_user')."""
@@ -36,7 +26,6 @@ class UserController:
             self.view.display_error_message("❌ Rôle invalide !")
             return None
 
-        # Correction : Passer role_id au lieu de role
         new_user = self.model(name=name, email=email, password=password, role_id=role.id)
         self.session.add(new_user)
         self.session.commit()
@@ -58,6 +47,7 @@ class UserController:
 
     def list_users(self):
         """Affichage de la liste des utilisateurs (nécessite 'read_user')."""
+
         if not self.check_permission("read_user"):
             return None
 
@@ -75,15 +65,23 @@ class UserController:
         else:
             self.view.display_error_message(f"⚠️ L'utilisateur {user_id} n'existe pas.")
 
-    def assign_client_to_user(self, user_id, client):
-        """Assigne un client à un utilisateur (commercial uniquement)."""
-        if not self.check_permission("assign_client"):
-            return None
+    def update_user(self, user_id):
+        """Mise à jour des informations d'un utilisateur (nécessite 'update_user')."""
 
+        if not self.check_permission("update_user"):
+            return None
         user = self.session.query(User).filter_by(id=user_id).first()
-        if user and user.role.name == "commercial":
-            user.clients.append(client)
-            self.session.commit()
-            self.view.display_info_message(f"✅ Client '{client.name}' assigné à {user.name}")
-        else:
-            self.view.display_error_message("❌ Impossible d'assigner un client à cet utilisateur.")
+        if not user:
+            self.view.display_error_message(f"⚠️ L'utilisateur {user_id} n'existe pas.")
+            return None
+        name, email, password = self.view.input_infos_user()
+        existing_user = self.session.query(User).filter(User.email == email, User.id != user_id).first()
+        if existing_user:
+            self.view.display_error_message("❌ Cet email est déjà utilisé !")
+            return None
+        user.name = name if name else user.name
+        user.email = email if email else user.email
+        if password:
+            user.password = user.set_password(password)
+        self.session.commit()
+        self.view.display_info_message(f"✅ Utilisateur {user_id} mis à jour !")

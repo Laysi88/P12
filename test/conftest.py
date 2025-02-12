@@ -69,3 +69,13 @@ def sample_user(role_gestion, session):
     session.commit()
     session.refresh(user)
     return user
+
+
+@pytest.fixture
+def sample_commercial(role_commercial, session):
+    """Fixture qui retourne un utilisateur avec un rôle 'commercial'."""
+    user = User(name="Alice", email="alice@example.com", password="securepass", role_id=role_commercial.id)
+    session.add(user)
+    session.commit()
+    session.refresh(user)
+    return user

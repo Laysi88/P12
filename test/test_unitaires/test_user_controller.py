@@ -1,7 +1,6 @@
 import pytest
 from controller.user_controller import UserController
 from model.user import User
-from model.client import Client
 
 
 @pytest.fixture
@@ -132,43 +131,52 @@ def test_get_user_details_permission_denied(user_controller, monkeypatch):
     assert result is None, "La fonction devrait retourner None lorsque la permission est refusée."
 
 
-def test_assign_client_to_user(user_controller, mock_session, sample_user, monkeypatch, role_commercial):
-    """Test que assign_client_to_user() assigne un client à un commercial."""
+def test_update_user_success(user_controller, mock_session, sample_user, monkeypatch):
+    """Test que update_user() met à jour un utilisateur existant avec succès."""
 
-    monkeypatch.setattr(user_controller, "check_permission", lambda action: True)
-    commercial = User(name="Alice", email="alice@example.com", password="pass1", role_id=role_commercial.id)
-    mock_session.add(commercial)
+    user2 = User(name="Jane Doe", email="jane@example.com", password="securepass", role_id=sample_user.role_id)
+    mock_session.add(user2)
     mock_session.commit()
-    client = Client(
-        name="Client X", email="client@example.com", phone="0123456789", company="TestCorp", commercial_id=None
+    monkeypatch.setattr(
+        user_controller.view, "input_infos_user", lambda: ("John Updated", "updated@doe.com", "newpass")
     )
-    mock_session.add(client)
-    mock_session.commit()
-    info_message = []
-    monkeypatch.setattr(user_controller.view, "display_info_message", lambda msg: info_message.append(msg))
-    user_controller.assign_client_to_user(commercial.id, client)
-    mock_session.refresh(client)
-    assert client.commercial_id == commercial.id, "Le client doit être assigné au commercial."
-    assert info_message, "Un message de confirmation doit être affiché."
-    assert f"✅ Client '{client.name}' assigné à {commercial.name}" in info_message[0]
+    user_controller.update_user(sample_user.id)
+    updated_user = mock_session.query(User).filter_by(id=sample_user.id).first()
+    assert updated_user.name == "John Updated"
+    assert updated_user.email == "updated@doe.com"
+    assert updated_user.check_password("newpass") is True
 
 
-def test_assign_client_to_user_permission_denied_or_invalid(user_controller, mock_session, sample_user, monkeypatch):
-    """Test que assign_client_to_user() retourne None si la permission est refusée ou si l'utilisateur n'est pas commercial."""
+def test_update_user_not_found(user_controller, mock_session, monkeypatch):
+    """Test que update_user() affiche une erreur si l'utilisateur n'existe pas."""
 
-    client = type("Client", (), {"name": "Client Y", "commercial_id": None})
-    monkeypatch.setattr(user_controller, "check_permission", lambda action: False)
-    result = user_controller.assign_client_to_user(sample_user.id, client)
-    assert result is None, "L'action ne doit pas être effectuée si la permission est refusée."
-    assert client.commercial_id is None, "Le client ne doit pas être assigné."
-    monkeypatch.setattr(user_controller, "check_permission", lambda action: True)
-    result = user_controller.assign_client_to_user(sample_user.id, client)
-    assert result is None, "L'action ne doit pas être effectuée si l'utilisateur n'est pas commercial."
-    assert client.commercial_id is None, "Le client ne doit pas être assigné."
+    fake_user_id = 999
     error_message = []
     monkeypatch.setattr(user_controller.view, "display_error_message", lambda msg: error_message.append(msg))
-    user_controller.assign_client_to_user(sample_user.id, client)
-    assert error_message, "Un message d'erreur doit être affiché."
-    assert "❌ Impossible d'assigner un client à cet utilisateur." in error_message[0], (
-        "Le bon message d'erreur doit être affiché."
+    user_controller.update_user(fake_user_id)
+    assert error_message, "Un message d'erreur devrait être affiché."
+    assert f"⚠️ L'utilisateur {fake_user_id} n'existe pas." in error_message[0]
+
+
+def test_update_user_email_already_exists(user_controller, mock_session, sample_user, monkeypatch):
+    """Test que update_user() refuse un email déjà utilisé."""
+
+    existing_user = User(name="Jane Doe", email="jane@example.com", password="securepass", role_id=sample_user.role_id)
+    mock_session.add(existing_user)
+    mock_session.commit()
+    monkeypatch.setattr(
+        user_controller.view, "input_infos_user", lambda: ("John Updated", "jane@example.com", "newpass")
     )
+    error_message = []
+    monkeypatch.setattr(user_controller.view, "display_error_message", lambda msg: error_message.append(msg))
+    user_controller.update_user(sample_user.id)
+    assert error_message, "Un message d'erreur devrait être affiché."
+    assert "❌ Cet email est déjà utilisé !" in error_message[0]
+
+
+def test_update_user_permission_denied(user_controller, monkeypatch):
+    """Test que update_user() ne met pas à jour si la permission est refusée."""
+
+    monkeypatch.setattr(user_controller, "check_permission", lambda action: False)
+    result = user_controller.update_user(1)
+    assert result is None, "La fonction devrait retourner None lorsque la permission est refusée."
