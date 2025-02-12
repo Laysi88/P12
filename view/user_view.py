@@ -29,7 +29,7 @@ class UserView:
         if user.clients:
             print(f"🔹 Clients gérés : {[client.name for client in user.clients]}")
         if user.events:
-            print(f"🔹 Événements suivis : {[event.title for event in user.events]}")
+            print(f"🔹 Événements suivis : {[event.name for event in user.events]}")
 
     def display_info_message(self, message):
         """Affiche un message d'information."""

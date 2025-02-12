@@ -3,3 +3,4 @@ omit =
     */__init__.py
     test/tests_db_connection.py
     test/*
+    main.py
