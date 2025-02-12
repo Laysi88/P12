@@ -18,6 +18,8 @@ class Role(Base):
                 "update_user",
                 "delete_user",
             },
+            "commercial": {},
+            "support": {},
         }
         return role_permissions.get(self.name, set())
 

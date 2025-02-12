@@ -6,8 +6,8 @@ from model.role import Role
     "role_name, expected_permissions",
     [
         ("gestion", {"create_user", "read_user", "update_user", "delete_user"}),
-        ("commercial", set()),
-        ("support", set()),
+        ("commercial", {}),
+        ("support", {}),
     ],
 )
 def test_get_permissions(role_name, expected_permissions):
