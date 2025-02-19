@@ -22,6 +22,10 @@ class ClientView:
         """Affiche une liste de clients."""
         if not clients:
             print("\n📜 Aucun client à afficher.")
+        else:
+            print("\n📜 Liste des clients :")
+            for client in clients:
+                print(f"- {client.id}: {client.name} ({client.email}) - Entreprise: {client.company}")
             return
 
     def display_client_details(self, client):

@@ -2,7 +2,6 @@ from model.client import Client
 from view.client_view import ClientView
 from controller.base_controller import BaseController
 from utils.config import Session as DBSession
-from datetime import datetime
 
 
 class ClientController(BaseController):
@@ -32,8 +31,6 @@ class ClientController(BaseController):
             phone=phone,
             company=company,
             commercial_id=self.user.id,
-            date_created=datetime.now(),
-            date_updated=datetime.now(),
         )
 
         self.session.add(new_client)

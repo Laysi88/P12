@@ -49,6 +49,9 @@ def main():
         print("5️⃣ - Se déconnecter")
         print("6️⃣ - Quitter")
         print("7️⃣ - Créer un client")
+        print("8️⃣ - Lister les clients")
+        print("9️⃣ - Lister les clients personnels")
+
         choix = input("👉 Faites votre choix : ")
 
         if choix == "1":
@@ -80,6 +83,10 @@ def main():
             break
         elif choix == "7":
             client_controller.create_client()
+        elif choix == "8":
+            client_controller.list_all_client()
+        elif choix == "9":
+            client_controller.list_personnal_client()
         else:
             print("❌ Choix invalide, veuillez recommencer.")
 

@@ -43,28 +43,53 @@ def test_display_clients_empty(client_view, capsys):
     assert "\n📜 Aucun client à afficher." in captured.out
 
 
+def test_display_clients(client_view, capsys):
+    """Test de display_clients() avec une liste de clients."""
+
+    client1 = Client(name="Client A", email="clientA@business.com", company="Business Corp")
+    client2 = Client(name="Client B", email="clientB@business.com", company="Tech Corp")
+
+    clients = [client1, client2]
+    client_view.display_clients(clients)
+    captured = capsys.readouterr()
+    assert "📜 Liste des clients :" in captured.out
+    assert f"- {client1.id}: {client1.name} ({client1.email}) - Entreprise: {client1.company}" in captured.out
+    assert f"- {client2.id}: {client2.name} ({client2.email}) - Entreprise: {client2.company}" in captured.out
+
+
 def test_display_client_details(client_view, capsys):
     """Test que display_client_details() affiche correctement les détails d'un client."""
 
     commercial = User(name="John Commercial", email="john@company.com", password="securepass", role_id=2)
-    client = Client(id=1, name="Client X", email="client@business.com", phone="123456789", company="Business Corp")
+    client = Client(
+        name="Client X",
+        email="client@business.com",
+        phone="123456789",
+        company="Business Corp",
+        commercial_id=commercial.id,
+    )
     client.commercial = commercial
     client_view.display_client_details(client)
     captured = capsys.readouterr()
-    assert "\n👤 Détails du client :" in captured.out
-    assert "🔹 ID : 1" in captured.out
-    assert "🔹 Nom : Client X" in captured.out
-    assert "🔹 Email : client@business.com" in captured.out
-    assert "🔹 Téléphone : 123456789" in captured.out
-    assert "🔹 Entreprise : Business Corp" in captured.out
-    assert "🔹 Commercial : John Commercial" in captured.out
+    assert "👤 Détails du client :" in captured.out
+    assert f"🔹 Nom : {client.name}" in captured.out
+    assert f"🔹 Email : {client.email}" in captured.out
+    assert f"🔹 Téléphone : {client.phone}" in captured.out
+    assert f"🔹 Entreprise : {client.company}" in captured.out
+    assert f"🔹 Commercial : {commercial.name}" in captured.out
 
 
 def test_display_client_details_no_commercial(client_view, capsys):
     """Test que display_client_details() affiche 'Non attribué' si aucun commercial n'est assigné."""
 
-    client = Client(id=2, name="Client Y", email="clientY@business.com", phone="987654321", company="Tech Corp")
-    client.commercial = None
+    client = Client(
+        name="Client Y", email="clientY@business.com", phone="987654321", company="Tech Corp", commercial_id=None
+    )
     client_view.display_client_details(client)
     captured = capsys.readouterr()
+    assert "👤 Détails du client :" in captured.out
+    assert f"🔹 Nom : {client.name}" in captured.out
+    assert f"🔹 Email : {client.email}" in captured.out
+    assert f"🔹 Téléphone : {client.phone}" in captured.out
+    assert f"🔹 Entreprise : {client.company}" in captured.out
     assert "🔹 Commercial : Non attribué" in captured.out
