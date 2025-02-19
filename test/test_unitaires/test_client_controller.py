@@ -62,7 +62,7 @@ def test_create_client_permission_denied(client_controller, monkeypatch):
 
 def test_list_all_clients_as_commercial(client_controller, mock_session):
     """Test qu'un commercial peut voir tous les clients."""
-    # 🔹 Création de clients fictifs
+
     client1 = Client(name="Client A", email="clientA@business.com", phone="0101010101", company="Company A")
     client2 = Client(name="Client B", email="clientB@business.com", phone="0202020202", company="Company B")
 
@@ -86,7 +86,7 @@ def test_list_all_clients_as_permission_denied(client_controller, monkeypatch):
 
 def test_list_personnal_clients(client_controller, mock_session, sample_commercial):
     """Test qu'un commercial peut voir ses clients personnels."""
-    # 🔹 Création de clients fictifs
+
     client1 = Client(
         name="Client A",
         email="clientA@business.com",
@@ -114,3 +114,97 @@ def test_list_personnal_clients_as_permission_denied(client_controller, monkeypa
     clients = client_controller.list_personnal_client()
 
     assert clients is None, "La liste des clients ne devrait pas être affichée."
+
+
+def test_update_client(client_controller, mock_session, sample_commercial, monkeypatch):
+    """Test que update_client() met à jour les informations d'un client."""
+
+    client = Client(
+        name="Old Name",
+        email="old@email.com",
+        phone="0101010101",
+        company="Old Company",
+        commercial_id=sample_commercial.id,
+    )
+    mock_session.add(client)
+    mock_session.commit()
+    monkeypatch.setattr(
+        client_controller.view, "input_client_info", lambda: ("New Name", "new@email.com", "0202020202", "New Company")
+    )
+    client_controller.update_client(client.id)
+    updated_client = mock_session.query(Client).filter_by(id=client.id).first()
+    assert updated_client.name == "New Name"
+    assert updated_client.email == "new@email.com"
+    assert updated_client.phone == "0202020202"
+    assert updated_client.company == "New Company"
+
+
+def test_update_client_not_found(client_controller, mock_session, capsys):
+    """Test que update_client() affiche une erreur si le client n'existe pas."""
+
+    client_id = 999
+    client_controller.update_client(client_id)
+
+    captured = capsys.readouterr()
+    assert "⚠️ Le client n'existe pas." in captured.out
+
+
+def test_update_client_email_already_used(client_controller, mock_session, sample_commercial, monkeypatch, capsys):
+    """Test que update_client() refuse un email déjà utilisé."""
+
+    client1 = Client(
+        name="Client A",
+        email="email@used.com",
+        phone="0101010101",
+        company="Company A",
+        commercial_id=sample_commercial.id,
+    )
+    client2 = Client(
+        name="Client B",
+        email="old@email.com",
+        phone="0202020202",
+        company="Company B",
+        commercial_id=sample_commercial.id,
+    )
+
+    mock_session.add_all([client1, client2])
+    mock_session.commit()
+    monkeypatch.setattr(
+        client_controller.view,
+        "input_client_info",
+        lambda: ("New Name", "email@used.com", "0303030303", "New Company"),
+    )
+
+    client_controller.update_client(client2.id)
+    captured = capsys.readouterr()
+    assert "⚠️ Email déjà utilisé." in captured.out
+
+
+def test_update_client_empty_fields(client_controller, mock_session, sample_commercial, monkeypatch):
+    """Test que update_client() conserve les valeurs si on ne renseigne pas tous les champs."""
+
+    client = Client(
+        name="Old Name",
+        email="old@email.com",
+        phone="0101010101",
+        company="Old Company",
+        commercial_id=sample_commercial.id,
+    )
+    mock_session.add(client)
+    mock_session.commit()
+    monkeypatch.setattr(client_controller.view, "input_client_info", lambda: ("", "", "", "New Company"))
+    client_controller.update_client(client.id)
+    updated_client = mock_session.query(Client).filter_by(id=client.id).first()
+
+    assert updated_client.name == "Old Name"
+    assert updated_client.email == "old@email.com"
+    assert updated_client.phone == "0101010101"
+    assert updated_client.company == "New Company"
+
+
+def test_update_client_permission_denied(client_controller, monkeypatch):
+    """Test que update_client() retourne None si la permission est refusée."""
+
+    monkeypatch.setattr(client_controller, "check_permission", lambda action: False)
+    return_value = client_controller.update_client(1)
+    assert return_value is None, "Le client ne devrait pas être mis à jour."

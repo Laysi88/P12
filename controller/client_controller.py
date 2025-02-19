@@ -58,3 +58,28 @@ class ClientController(BaseController):
         clients = self.session.query(Client).filter_by(commercial_id=self.user.id).all()
         self.view.display_clients(clients)
         return clients
+
+    def update_client(self, client_id):
+        """Mise à jour des informations d'un client (nécessite 'update_client')."""
+
+        if not self.check_permission("update_client"):
+            return None
+
+        client = self.session.query(Client).filter_by(id=client_id).first()
+        if not client:
+            self.view.display_error_message(f"⚠️ Le client {client_id} n'existe pas.")
+            return None
+
+        name, email, phone, company = self.view.input_client_info()
+
+        existing_client = self.session.query(Client).filter(Client.email == email, Client.id != client_id).first()
+        if existing_client:
+            self.view.display_error_message("⚠️ Cet email est déjà utilisé par un autre client.")
+            return None
+        client.name = name if name else client.name
+        client.email = email if email else client.email
+        client.phone = phone if phone else client.phone
+        client.company = company if company else client.company
+
+        self.session.commit()
+        self.view.display_info_message(f"✅ Client {client_id} mis à jour !")

@@ -51,6 +51,7 @@ def main():
         print("7️⃣ - Créer un client")
         print("8️⃣ - Lister les clients")
         print("9️⃣ - Lister les clients personnels")
+        print("1️⃣0️⃣ - Modifier un client")
 
         choix = input("👉 Faites votre choix : ")
 
@@ -87,6 +88,15 @@ def main():
             client_controller.list_all_client()
         elif choix == "9":
             client_controller.list_personnal_client()
+        elif choix == "10":
+            while True:
+                try:
+                    client_id = int(input("ID du client à modifier : "))
+                    client_controller.update_client(client_id)
+                    break
+                except ValueError:
+                    print("❌ ID invalide, veuillez recommencer.")
+
         else:
             print("❌ Choix invalide, veuillez recommencer.")
 
