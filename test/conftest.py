@@ -95,3 +95,18 @@ def sample_client(mock_session, sample_commercial):
     mock_session.commit()
     mock_session.refresh(client)
     return client
+
+
+@pytest.fixture
+def sample_contrat(sample_client, session):
+    """Fixture qui retourne un contrat fictif associé à un client existant."""
+    contrat = Contrat(
+        client_id=sample_client.id,
+        total_amount=10000,
+        remaining_amount=5000,
+        status=False,
+    )
+    session.add(contrat)
+    session.commit()
+    session.refresh(contrat)
+    return contrat

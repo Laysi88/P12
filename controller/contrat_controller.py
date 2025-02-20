@@ -20,40 +20,57 @@ class ContratController(BaseController):
                 "❌ Accès refusé : Seuls les commerciaux (gérant le client) et les gestionnaires peuvent créer un contrat."
             )
             return None
-
-        # 🔹 Récupérer la liste des clients disponibles
         if self.user.role.name == "commercial":
             clients = self.session.query(Client).filter_by(commercial_id=self.user.id).all()
-        else:  # Gestionnaire
+        else:
             clients = self.session.query(Client).all()
 
         if not clients:
             self.view.display_error_message("⚠️ Aucun client disponible.")
             return None
-
-        # 🔹 Demander à l'utilisateur de sélectionner un client
         client_id, total_amount, remaining_amount = self.view.input_contrat_info(clients)
-
-        # 🔹 Vérifier si le client existe réellement
         client = self.session.query(Client).filter_by(id=client_id).first()
         if not client:
             self.view.display_error_message("⚠️ Client inexistant.")
             return None
-
-        # 🔹 Vérification des droits pour les commerciaux
         if self.user.role.name == "commercial" and client.commercial_id != self.user.id:
             self.view.display_error_message("⚠️ Vous ne pouvez créer un contrat que pour vos propres clients.")
             return None
-
-        # 🔹 Création du contrat
         new_contrat = Contrat(
             client_id=client_id,
             total_amount=total_amount,
             remaining_amount=remaining_amount,
             status=False,
         )
-
         self.session.add(new_contrat)
         self.session.commit()
         self.view.display_info_message(f"✅ Contrat créé avec succès pour le client {client.name} !")
         return new_contrat
+
+    def update_contrat(self, contrat_id):
+        """Met à jour un contrat (total_amount modifiable avant signature, remaining_amount toujours modifiable, signature possible)."""
+
+        if not self.check_permission("update_contrat"):
+            self.view.display_error_message("❌ Accès refusé : Vous ne pouvez pas modifier ce contrat.")
+            return None
+
+        contrat = self.session.query(Contrat).filter_by(id=contrat_id).first()
+
+        if not contrat:
+            self.view.display_error_message("⚠️ Contrat inexistant.")
+            return None
+
+        if self.user.role.name == "commercial" and contrat.client.commercial_id != self.user.id:
+            self.view.display_error_message("⚠️ Vous ne pouvez modifier que les contrats de vos propres clients.")
+            return None
+
+        new_total_amount, new_remaining_amount, new_status = self.view.input_update_contrat_info(contrat)
+
+        if not contrat.status:
+            contrat.total_amount = new_total_amount
+        contrat.remaining_amount = new_remaining_amount
+        contrat.status = new_status
+
+        self.session.commit()
+        self.view.display_info_message(f"✅ Contrat {contrat.id} mis à jour avec succès !")
+        return contrat

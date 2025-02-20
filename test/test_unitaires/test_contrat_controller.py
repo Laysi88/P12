@@ -124,7 +124,6 @@ def test_create_contrat_for_other_commercial_client(
 ):
     """Test qu'un commercial ne peut pas créer un contrat pour un client qui ne lui appartient pas."""
 
-    # 🔹 Créer un autre commercial
     autre_commercial = User(
         name="Autre Commercial", email="other@company.com", password="pass", role_id=sample_commercial.role_id
     )
@@ -132,10 +131,8 @@ def test_create_contrat_for_other_commercial_client(
     mock_session.commit()
     mock_session.refresh(autre_commercial)
 
-    # 🔹 Modifier le contrôleur pour utiliser cet autre commercial
     contrat_controller.user = autre_commercial
 
-    # 🔹 Ajouter un client qui appartient à cet autre commercial
     client_autre_commercial = Client(
         name="Client de Autre Commercial",
         email="client@autre.com",
@@ -146,12 +143,11 @@ def test_create_contrat_for_other_commercial_client(
     mock_session.add(client_autre_commercial)
     mock_session.commit()
 
-    # 🔹 Simuler l'entrée utilisateur pour tenter de créer un contrat pour un client qui ne lui appartient pas
     monkeypatch.setattr(
         contrat_controller.view,
         "input_contrat_info",
         lambda clients: (
-            sample_client.id,  # ❌ Ce client appartient au premier commercial
+            sample_client.id,
             12000,
             6000,
         ),
@@ -160,11 +156,93 @@ def test_create_contrat_for_other_commercial_client(
     error_message = []
     monkeypatch.setattr(contrat_controller.view, "display_error_message", lambda msg: error_message.append(msg))
 
-    # 🎯 Exécution
     result = contrat_controller.create_contrat()
 
-    # ✅ Vérifications
     assert result is None, "Le contrat ne doit pas être créé."
     assert "⚠️ Vous ne pouvez créer un contrat que pour vos propres clients." in error_message[0], (
         "Le message d'erreur doit être affiché."
     )
+
+
+def test_update_contrat_not_authorized_for_other_commercial(
+    contrat_controller, mock_session, sample_contrat, sample_commercial, monkeypatch
+):
+    """Test qu'un commercial ne peut pas modifier un contrat s'il n'est pas affilié au client."""
+
+    autre_commercial = User(
+        name="Autre Commercial", email="other@company.com", password="pass", role_id=sample_commercial.role_id
+    )
+    mock_session.add(autre_commercial)
+    mock_session.commit()
+    mock_session.refresh(autre_commercial)
+
+    contrat_controller.user = autre_commercial
+
+    monkeypatch.setattr(
+        contrat_controller.view,
+        "input_update_contrat_info",
+        lambda contrat: (12000, 6000, True),
+    )
+
+    error_message = []
+    monkeypatch.setattr(contrat_controller.view, "display_error_message", lambda msg: error_message.append(msg))
+
+    result = contrat_controller.update_contrat(sample_contrat.id)
+
+    assert result is None, "Le contrat ne doit pas être mis à jour."
+    assert "⚠️ Vous ne pouvez modifier que les contrats de vos propres clients." in error_message[0], (
+        "Le message d'erreur doit être affiché."
+    )
+
+
+def test_update_contrat_as_gestionnaire(contrat_controller, mock_session, sample_contrat, sample_user, monkeypatch):
+    """Test qu'un gestionnaire peut modifier un contrat, peu importe le client."""
+
+    contrat_controller.user = sample_user
+
+    monkeypatch.setattr(
+        contrat_controller.view,
+        "input_update_contrat_info",
+        lambda contrat: (15000, 7500, True),
+    )
+
+    info_message = []
+    monkeypatch.setattr(contrat_controller.view, "display_info_message", lambda msg: info_message.append(msg))
+
+    updated_contrat = contrat_controller.update_contrat(sample_contrat.id)
+
+    assert updated_contrat is not None, "Le contrat doit être mis à jour par le gestionnaire."
+    assert updated_contrat.total_amount == 15000, "Le montant total doit être mis à jour."
+    assert updated_contrat.remaining_amount == 7500, "Le montant restant doit être mis à jour."
+    assert updated_contrat.status is True, "Le contrat doit être signé."
+    assert f"✅ Contrat {sample_contrat.id} mis à jour avec succès !" in info_message[0]
+
+
+def test_update_contrat_permission_denied(contrat_controller, sample_contrat, monkeypatch):
+    """Test que update_contrat() retourne None si l'utilisateur n'a pas la permission de modifier le contrat."""
+
+    monkeypatch.setattr(contrat_controller, "check_permission", lambda action: False)
+
+    error_message = []
+    monkeypatch.setattr(contrat_controller.view, "display_error_message", lambda msg: error_message.append(msg))
+
+    result = contrat_controller.update_contrat(sample_contrat.id)
+
+    assert result is None, "Le contrat ne doit pas être modifié."
+    assert "❌ Accès refusé : Vous ne pouvez pas modifier ce contrat." in error_message[0], (
+        "Le message d'erreur doit être affiché."
+    )
+
+
+def test_update_contrat_not_found(contrat_controller, monkeypatch):
+    """Test que update_contrat() affiche une erreur si le contrat n'existe pas."""
+
+    fake_contrat_id = 999
+
+    error_message = []
+    monkeypatch.setattr(contrat_controller.view, "display_error_message", lambda msg: error_message.append(msg))
+
+    result = contrat_controller.update_contrat(fake_contrat_id)
+
+    assert result is None, "La mise à jour ne doit pas avoir lieu."
+    assert "⚠️ Contrat inexistant." in error_message[0], "Le message d'erreur doit être affiché."

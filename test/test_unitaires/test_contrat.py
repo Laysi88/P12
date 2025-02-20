@@ -1,3 +1,4 @@
+import pytest
 from model.contrat import Contrat
 from model.client import Client
 import re
@@ -45,3 +46,27 @@ def test_repr_contrat(session):
     )
 
     assert re.match(pattern, repr(contrat)), f"La représentation textuelle est incorrecte : {repr(contrat)}"
+
+
+def test_contrat_total_amount_negative(mock_session):
+    """Test qu'un contrat ne peut pas avoir un montant total négatif."""
+    with pytest.raises(ValueError, match="total_amount ne peut pas être négatif."):
+        contrat = Contrat(client_id=1, total_amount=-5000, remaining_amount=2000)
+        mock_session.add(contrat)
+        mock_session.commit()
+
+
+def test_contrat_remaining_amount_negative(mock_session):
+    """Test qu'un contrat ne peut pas avoir un montant restant négatif."""
+    with pytest.raises(ValueError, match="remaining_amount ne peut pas être négatif."):
+        contrat = Contrat(client_id=1, total_amount=5000, remaining_amount=-1000)
+        mock_session.add(contrat)
+        mock_session.commit()
+
+
+def test_contrat_remaining_greater_than_total(mock_session):
+    """Test qu'un contrat ne peut pas avoir un montant restant supérieur au total."""
+    with pytest.raises(ValueError, match="Le montant restant ne peut pas dépasser le montant total."):
+        contrat = Contrat(client_id=1, total_amount=5000, remaining_amount=6000)
+        mock_session.add(contrat)
+        mock_session.commit()

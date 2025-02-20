@@ -18,6 +18,7 @@ class Role(Base):
                 "update_user",
                 "delete_user",
                 "create_contrat",
+                "update_contrat",
             },
             "commercial": {
                 "create_client",

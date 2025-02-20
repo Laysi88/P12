@@ -5,7 +5,7 @@ from model.role import Role
 @pytest.mark.parametrize(
     "role_name, expected_permissions",
     [
-        ("gestion", {"create_user", "read_user", "update_user", "delete_user", "create_contrat"}),
+        ("gestion", {"create_user", "read_user", "update_user", "delete_user", "create_contrat", "update_contrat"}),
         (
             "commercial",
             {

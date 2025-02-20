@@ -28,3 +28,24 @@ class ContratView:
         remaining_amount = float(input("💰 Montant restant (€) : ").strip())
 
         return client_id, total_amount, remaining_amount
+
+    def input_update_contrat_info(self, contrat):
+        """Demande à l'utilisateur de saisir les nouvelles infos du contrat."""
+
+        print(f"\n🔄 Mise à jour du contrat {contrat.id} ({contrat.client.name})")
+        print(f"💰 Montant total actuel : {contrat.total_amount}")
+        print(f"💰 Montant restant actuel : {contrat.remaining_amount}")
+        print(f"📜 Statut actuel : {'✅ Signé' if contrat.status else '❌ Non signé'}")
+
+        new_total_amount = None
+        if not contrat.status:
+            new_total_amount = input("💰 Nouveau montant total (laisser vide pour ne pas changer) : ").strip()
+            new_total_amount = float(new_total_amount) if new_total_amount else contrat.total_amount
+
+        new_remaining_amount = input("💰 Nouveau montant restant (laisser vide pour ne pas changer) : ").strip()
+        new_remaining_amount = float(new_remaining_amount) if new_remaining_amount else contrat.remaining_amount
+
+        new_status = input("✍️ Signer le contrat ? (oui/non, laisser vide pour ne pas changer) : ").strip().lower()
+        new_status = True if new_status == "oui" else contrat.status
+
+        return new_total_amount, new_remaining_amount, new_status
