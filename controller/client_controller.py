@@ -7,8 +7,7 @@ from utils.config import Session as DBSession
 class ClientController(BaseController):
     def __init__(self, user):
         """Initialise le contrôleur avec l'utilisateur connecté."""
-        self.session = DBSession()
-        super().__init__(user, self.session)
+        super().__init__(user, DBSession())
         self.model = Client
         self.view = ClientView()
 

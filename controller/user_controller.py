@@ -8,8 +8,7 @@ from controller.base_controller import BaseController
 class UserController(BaseController):
     def __init__(self, user):
         """Initialise le contrôleur avec l'utilisateur connecté."""
-        session = DBSession()
-        super().__init__(user, session)
+        super().__init__(user, DBSession())
         self.model = User
         self.view = UserView()
 

@@ -79,3 +79,19 @@ def sample_commercial(role_commercial, session):
     session.commit()
     session.refresh(user)
     return user
+
+
+@pytest.fixture
+def sample_client(mock_session, sample_commercial):
+    """Fixture qui crée un client attribué à un commercial."""
+    client = Client(
+        name="Client Test",
+        email="client@test.com",
+        phone="0101010101",
+        company="Test Corp",
+        commercial_id=sample_commercial.id,
+    )
+    mock_session.add(client)
+    mock_session.commit()
+    mock_session.refresh(client)
+    return client
