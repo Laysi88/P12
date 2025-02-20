@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, ForeignKey, Float, DateTime, Boolean
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, validates
 from datetime import datetime
 from utils.config import Base
 
@@ -33,3 +33,12 @@ class Contrat(Base):
             f"remaining_amount={float(self.remaining_amount)}, "
             f"date_created={self.date_created if self.date_created else 'None'}, status={self.status})>"
         )
+
+    @validates("remaining_amount", "total_amount")
+    def validate_amounts(self, key, value):
+        """Empêche les montants négatifs et le montant restant supérieur au total."""
+        if value < 0:
+            raise ValueError(f"{key} ne peut pas être négatif.")
+        if key == "remaining_amount" and value > self.total_amount:
+            raise ValueError("Le montant restant ne peut pas dépasser le montant total.")
+        return value
