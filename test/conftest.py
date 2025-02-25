@@ -3,6 +3,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from model import Role, User, Client, Event, Contrat  # noqa: F401
 from utils.config import Base
+from datetime import datetime
 
 
 TEST_DATABASE_URL = "sqlite:///:memory:"
@@ -15,13 +16,13 @@ TestingSessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=Fals
 @pytest.fixture(scope="function")
 def session():
     """Fixture pour une session isolée en SQLite."""
-    Base.metadata.create_all(engine)  # Création des tables
+    Base.metadata.create_all(engine)
     db = TestingSessionLocal()
     try:
         yield db
     finally:
         db.close()
-        Base.metadata.drop_all(engine)  # Suppression des tables après chaque test
+        Base.metadata.drop_all(engine)
 
 
 @pytest.fixture
@@ -32,52 +33,52 @@ def mock_session(monkeypatch, session):
 
 
 @pytest.fixture
-def role_gestion(session):
+def role_gestion(mock_session):
     """Fixture pour un rôle 'gestion'."""
     role = Role(name="gestion")
-    session.add(role)
-    session.commit()
-    session.refresh(role)
+    mock_session.add(role)
+    mock_session.commit()
+    mock_session.refresh(role)
     return role
 
 
 @pytest.fixture
-def role_commercial(session):
+def role_commercial(mock_session):
     """Fixture pour un rôle 'commercial'."""
     role = Role(name="commercial")
-    session.add(role)
-    session.commit()
-    session.refresh(role)
+    mock_session.add(role)
+    mock_session.commit()
+    mock_session.refresh(role)
     return role
 
 
 @pytest.fixture
-def role_support(session):
+def role_support(mock_session):
     """Fixture pour un rôle 'support'."""
     role = Role(name="support")
-    session.add(role)
-    session.commit()
-    session.refresh(role)
+    mock_session.add(role)
+    mock_session.commit()
+    mock_session.refresh(role)
     return role
 
 
 @pytest.fixture
-def sample_user(role_gestion, session):
+def sample_user(role_gestion, mock_session):
     """Fixture qui retourne un utilisateur avec un rôle 'gestion'."""
     user = User(name="John Doe", email="john@example.com", password="securepass", role_id=role_gestion.id)
-    session.add(user)
-    session.commit()
-    session.refresh(user)
+    mock_session.add(user)
+    mock_session.commit()
+    mock_session.refresh(user)
     return user
 
 
 @pytest.fixture
-def sample_commercial(role_commercial, session):
+def sample_commercial(role_commercial, mock_session):
     """Fixture qui retourne un utilisateur avec un rôle 'commercial'."""
     user = User(name="Alice", email="alice@example.com", password="securepass", role_id=role_commercial.id)
-    session.add(user)
-    session.commit()
-    session.refresh(user)
+    mock_session.add(user)
+    mock_session.commit()
+    mock_session.refresh(user)
     return user
 
 
@@ -98,7 +99,7 @@ def sample_client(mock_session, sample_commercial):
 
 
 @pytest.fixture
-def sample_contrat(sample_client, session):
+def sample_contrat(sample_client, mock_session):
     """Fixture qui retourne un contrat fictif associé à un client existant."""
     contrat = Contrat(
         client_id=sample_client.id,
@@ -106,7 +107,31 @@ def sample_contrat(sample_client, session):
         remaining_amount=5000,
         status=False,
     )
-    session.add(contrat)
-    session.commit()
-    session.refresh(contrat)
+    mock_session.add(contrat)
+    mock_session.commit()
+    mock_session.refresh(contrat)
     return contrat
+
+
+@pytest.fixture
+def sample_event(sample_contrat, mock_session):
+    """Fixture qui retourne un événement fictif associé à un contrat signé."""
+
+    sample_contrat.status = True
+    mock_session.commit()
+
+    event = Event(
+        name="Événement Test",
+        contrat_id=sample_contrat.id,
+        start_date=datetime(2025, 3, 15, 10, 0),
+        end_date=datetime(2025, 3, 15, 18, 0),
+        location="Paris",
+        attendees=50,
+        support_id=None,
+        notes="Événement de démonstration.",
+    )
+
+    mock_session.add(event)
+    mock_session.commit()
+    mock_session.refresh(event)
+    return event

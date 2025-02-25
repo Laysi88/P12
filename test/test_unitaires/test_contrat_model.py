@@ -35,7 +35,7 @@ def test_sign_contrat(session):
     assert contrat.status is True, "Le contrat doit être marqué comme signé après l'appel à sign_contrat()."
 
 
-def test_repr_contrat(session):
+def test_repr_contrat():
     """Test la représentation textuelle d'un contrat."""
 
     contrat = Contrat(client_id=1, total_amount=10000, remaining_amount=5000)
