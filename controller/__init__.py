@@ -3,3 +3,4 @@ from .auth_controller import AuthController  # noqa F401
 from .base_controller import BaseController  # noqa F401
 from .client_controller import ClientController  # noqa F401
 from .contrat_controller import ContratController  # noqa F401
+from .event_controller import EventController  # noqa F401

@@ -31,6 +31,7 @@ class Role(Base):
                 "update_contrat",
                 "read_contrat",
                 "filter_contrat",
+                "create_event",
             },
             "support": {},
         }

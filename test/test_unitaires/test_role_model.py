@@ -29,6 +29,7 @@ from model.role import Role
                 "update_contrat",
                 "read_contrat",
                 "filter_contrat",
+                "create_event",
             },
         ),
         ("support", {}),
