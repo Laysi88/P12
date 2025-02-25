@@ -110,3 +110,45 @@ def test_input_contrat_info_invalid_value(contrat_view, mock_session, monkeypatc
     contrat_view.input_contrat_info(fake_clients)
 
     assert "❌ Veuillez entrer un nombre valide." in error_message, "Le message d'erreur doit s'afficher."
+
+
+def test_display_contrats(contrat_view, capsys, mock_session, sample_client):
+    """Test que display_contrats affiche correctement les contrats."""
+
+    contrat_1 = Contrat(client_id=sample_client.id, total_amount=5000, remaining_amount=2000, status=False)
+    contrat_2 = Contrat(client_id=sample_client.id, total_amount=7000, remaining_amount=0, status=True)
+
+    mock_session.add_all([contrat_1, contrat_2])
+    mock_session.commit()
+
+    contrat_view.display_contrats([contrat_1, contrat_2])
+
+    captured = capsys.readouterr()
+    assert f"🔹 ID: {contrat_1.id}" in captured.out, "Le premier contrat doit être affiché."
+    assert f"🔹 ID: {contrat_2.id}" in captured.out, "Le deuxième contrat doit être affiché."
+    assert "📜 Liste des contrats :" in captured.out, "Le titre doit être affiché."
+
+
+def test_no_contrat_to_display(contrat_view, capsys):
+    """Test que display_contrats affiche un message si aucun contrat n'est à afficher."""
+
+    contrat_view.display_contrats([])
+
+    captured = capsys.readouterr()
+    assert "📭 Aucun contrat à afficher." in captured.out, "Le message doit être affiché."
+
+
+def test_ask_filter_option(contrat_view, monkeypatch):
+    """Test que ask_filter_option retourne le bon filtre selon l'entrée utilisateur."""
+
+    monkeypatch.setattr("builtins.input", lambda _: "1")
+    assert contrat_view.ask_filter_option() == "non_signes", "Le choix 1 doit retourner 'non_signes'"
+
+    monkeypatch.setattr("builtins.input", lambda _: "2")
+    assert contrat_view.ask_filter_option() == "paiement_en_attente", "Le choix 2 doit retourner 'paiement_en_attente'"
+
+    monkeypatch.setattr("builtins.input", lambda _: "3")
+    assert contrat_view.ask_filter_option() is None, "Un choix invalide doit retourner None"
+
+    monkeypatch.setattr("builtins.input", lambda _: "abc")
+    assert contrat_view.ask_filter_option() is None, "Une entrée non numérique doit retourner None"

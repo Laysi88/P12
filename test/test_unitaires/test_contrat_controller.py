@@ -2,6 +2,7 @@ import pytest
 from controller.contrat_controller import ContratController
 from model.client import Client
 from model.user import User
+from model.contrat import Contrat
 
 
 @pytest.fixture
@@ -44,23 +45,16 @@ def test_create_contrat_success(contrat_controller, sample_client, monkeypatch):
 def test_create_contrat_as_gestionnaire(contrat_controller, sample_client, sample_user, monkeypatch):
     """Test qu'un gestionnaire peut créer un contrat pour n'importe quel client."""
 
-    # 🔹 Modifier le contrôleur pour qu'il utilise un gestionnaire
-    contrat_controller.user = sample_user  # On force le rôle à "gestionnaire"
-
-    # 🔹 Simuler l'entrée utilisateur
+    contrat_controller.user = sample_user
     monkeypatch.setattr(
         contrat_controller.view,
         "input_contrat_info",
-        lambda clients: (sample_client.id, 15000, 7500),  # ✅ Accepte `clients`
+        lambda clients: (sample_client.id, 15000, 7500),
     )
-
     info_message = []
     monkeypatch.setattr(contrat_controller.view, "display_info_message", lambda msg: info_message.append(msg))
-
-    # 🎯 Exécution
     new_contrat = contrat_controller.create_contrat()
 
-    # ✅ Vérifications
     assert new_contrat is not None, "Le contrat doit être créé par le gestionnaire."
     assert new_contrat.client_id == sample_client.id
     assert new_contrat.total_amount == 15000
@@ -84,7 +78,7 @@ def test_create_contrat_no_client_available(contrat_controller, monkeypatch):
     assert "⚠️ Aucun client disponible." in error_message[0], "Le message 'Aucun client disponible' doit être affiché."
 
 
-def test_create_contrat_client_not_found(contrat_controller, mock_session, sample_client, monkeypatch):
+def test_create_contrat_client_not_found(contrat_controller, mock_session, monkeypatch):
     """Test que create_contrat() affiche 'Client inexistant' si le client n'existe pas mais qu'il y a d'autres clients disponibles."""
 
     another_client = Client(
@@ -195,7 +189,7 @@ def test_update_contrat_not_authorized_for_other_commercial(
     )
 
 
-def test_update_contrat_as_gestionnaire(contrat_controller, mock_session, sample_contrat, sample_user, monkeypatch):
+def test_update_contrat_as_gestionnaire(contrat_controller, sample_contrat, sample_user, monkeypatch):
     """Test qu'un gestionnaire peut modifier un contrat, peu importe le client."""
 
     contrat_controller.user = sample_user
@@ -246,3 +240,132 @@ def test_update_contrat_not_found(contrat_controller, monkeypatch):
 
     assert result is None, "La mise à jour ne doit pas avoir lieu."
     assert "⚠️ Contrat inexistant." in error_message[0], "Le message d'erreur doit être affiché."
+
+
+def test_display_all_contrats(contrat_controller, mock_session, sample_client, monkeypatch):
+    """Test que display_all_contrats affiche tous les contrats si l'utilisateur a la permission."""
+
+    monkeypatch.setattr(contrat_controller, "check_permission", lambda action: action == "read_contrat")
+
+    contrat1 = Contrat(client_id=sample_client.id, total_amount=5000, remaining_amount=1000, status=False)
+    contrat2 = Contrat(client_id=sample_client.id, total_amount=10000, remaining_amount=0, status=True)
+
+    mock_session.add_all([contrat1, contrat2])
+    mock_session.commit()
+
+    info_message = []
+    monkeypatch.setattr(contrat_controller.view, "display_info_message", lambda msg: info_message.append(msg))
+
+    contrats = contrat_controller.read_contrat()
+
+    assert contrats is not None, "La fonction doit retourner une liste de contrats"
+    assert len(contrats) == 2, "Deux contrats doivent être affichés"
+    assert not info_message, "Aucun message ne doit être affiché si des contrats existent"
+
+
+def test_display_all_contrats_no_permission(contrat_controller, monkeypatch):
+    """Test que display_all_contrats refuse l'accès sans permission."""
+
+    monkeypatch.setattr(contrat_controller, "check_permission", lambda action: False)
+
+    error_message = []
+    monkeypatch.setattr(contrat_controller.view, "display_error_message", lambda msg: error_message.append(msg))
+
+    contrats = contrat_controller.read_contrat()
+
+    assert contrats == [], "Sans permission, aucun contrat ne doit être retourné"
+    assert "❌ Accès refusé" in error_message[0], "Un message d'erreur doit être affiché"
+
+
+def test_display_all_contrats_empty(contrat_controller, mock_session, monkeypatch):
+    """Test que display_all_contrats affiche un message si aucun contrat n'est trouvé."""
+
+    monkeypatch.setattr(contrat_controller, "check_permission", lambda action: action == "read_contrat")
+
+    info_message = []
+    monkeypatch.setattr(contrat_controller.view, "display_info_message", lambda msg: info_message.append(msg))
+
+    contrats = contrat_controller.read_contrat()
+
+    assert contrats == [], "La liste doit être vide si aucun contrat n'est trouvé"
+    assert "📭 Aucun contrat trouvé." in info_message[0], "Le message d'absence de contrat doit être affiché"
+
+
+def test_filter_contrats_non_signes(contrat_controller, mock_session, sample_client, monkeypatch):
+    """Test que filter_contrats retourne uniquement les contrats non signés."""
+
+    contrat_1 = Contrat(client_id=sample_client.id, total_amount=5000, remaining_amount=2000, status=False)
+    contrat_2 = Contrat(client_id=sample_client.id, total_amount=7000, remaining_amount=0, status=True)
+
+    mock_session.add_all([contrat_1, contrat_2])
+    mock_session.commit()
+
+    monkeypatch.setattr(contrat_controller.view, "ask_filter_option", lambda: "non_signes")
+    monkeypatch.setattr(contrat_controller, "check_permission", lambda _: True)
+
+    contrats = contrat_controller.filter_contrats()
+
+    assert contrats == [contrat_1], "Seuls les contrats non signés doivent être retournés."
+
+
+def test_filter_contrats_paiement_en_attente(contrat_controller, mock_session, sample_client, monkeypatch):
+    """Test que filter_contrats retourne uniquement les contrats avec paiement en attente."""
+
+    contrat_1 = Contrat(client_id=sample_client.id, total_amount=5000, remaining_amount=2000, status=True)
+    contrat_2 = Contrat(client_id=sample_client.id, total_amount=7000, remaining_amount=0, status=True)
+
+    mock_session.add_all([contrat_1, contrat_2])
+    mock_session.commit()
+
+    monkeypatch.setattr(contrat_controller.view, "ask_filter_option", lambda: "paiement_en_attente")
+    monkeypatch.setattr(contrat_controller, "check_permission", lambda _: True)
+
+    contrats = contrat_controller.filter_contrats()
+
+    assert contrats == [contrat_1], "Seuls les contrats avec un reste à payer doivent être retournés."
+
+
+def test_filter_contrats_invalid_option(contrat_controller, monkeypatch):
+    """Test que filter_contrats affiche une erreur en cas d'option invalide."""
+
+    monkeypatch.setattr(contrat_controller.view, "ask_filter_option", lambda: "invalid_option")
+    monkeypatch.setattr(contrat_controller, "check_permission", lambda _: True)
+
+    error_message = []
+    monkeypatch.setattr(contrat_controller.view, "display_error_message", lambda msg: error_message.append(msg))
+
+    contrats = contrat_controller.filter_contrats()
+
+    assert contrats == [], "Aucun contrat ne doit être retourné avec une option invalide."
+    assert "❌ Option invalide." in error_message, "Un message d'erreur doit être affiché."
+
+
+def test_filter_permisson(contrat_controller, monkeypatch):
+    """Test que filter_contrats affiche une erreur si l'utilisateur n'a pas la permission."""
+
+    monkeypatch.setattr(contrat_controller, "check_permission", lambda _: False)
+
+    error_message = []
+    monkeypatch.setattr(contrat_controller.view, "display_error_message", lambda msg: error_message.append(msg))
+
+    contrats = contrat_controller.filter_contrats()
+
+    assert contrats == [], "Aucun contrat ne doit être retourné si la permission est refusée."
+    assert "❌ Accès refusé : Vous n'avez pas la permission d'afficher les contrats." in error_message, (
+        "Un message d'erreur doit être affiché."
+    )
+
+
+def test_no_contrat_to_display_for_filter(contrat_controller, monkeypatch):
+    """Test que filter_contrats affiche un message si aucun contrat n'est à afficher."""
+
+    monkeypatch.setattr(contrat_controller.view, "ask_filter_option", lambda: "non_signes")
+    monkeypatch.setattr(contrat_controller, "check_permission", lambda _: True)
+
+    info_message = []
+    monkeypatch.setattr(contrat_controller.view, "display_info_message", lambda msg: info_message.append(msg))
+
+    contrats = contrat_controller.filter_contrats()
+
+    assert contrats == [], "Aucun contrat ne doit être retourné."
+    assert "📭 Aucun contrat trouvé pour ce filtre." in info_message, "Un message informatif doit être affiché."

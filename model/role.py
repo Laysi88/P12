@@ -19,6 +19,8 @@ class Role(Base):
                 "delete_user",
                 "create_contrat",
                 "update_contrat",
+                "read_contrat",
+                "filter_contrat",
             },
             "commercial": {
                 "create_client",
@@ -27,6 +29,8 @@ class Role(Base):
                 "create_contrat",
                 "read_contrat",
                 "update_contrat",
+                "read_contrat",
+                "filter_contrat",
             },
             "support": {},
         }

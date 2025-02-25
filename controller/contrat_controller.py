@@ -74,3 +74,47 @@ class ContratController(BaseController):
         self.session.commit()
         self.view.display_info_message(f"✅ Contrat {contrat.id} mis à jour avec succès !")
         return contrat
+
+    def read_contrat(self):
+        """Affiche tous les contrats si l'utilisateur a la permission."""
+
+        if not self.check_permission("read_contrat"):
+            self.view.display_error_message("❌ Accès refusé : Vous n'avez pas la permission d'afficher les contrats.")
+            return []
+
+        contrats = self.session.query(Contrat).all()
+
+        if not contrats:
+            self.view.display_info_message("📭 Aucun contrat trouvé.")
+        else:
+            self.view.display_contrats(contrats)
+
+        return contrats
+
+    def filter_contrats(self):
+        """Permet à l'utilisateur de filtrer les contrats (non signés ou avec paiement en attente)."""
+
+        if not self.check_permission("view_contrats"):
+            self.view.display_error_message("❌ Accès refusé : Vous n'avez pas la permission d'afficher les contrats.")
+            return []
+
+        filtre = self.view.ask_filter_option()
+
+        query = self.session.query(Contrat)
+
+        if filtre == "non_signes":
+            query = query.filter_by(status=False)
+        elif filtre == "paiement_en_attente":
+            query = query.filter(Contrat.remaining_amount > 0)
+        else:
+            self.view.display_error_message("❌ Option invalide.")
+            return []
+
+        contrats = query.all()
+
+        if not contrats:
+            self.view.display_info_message("📭 Aucun contrat trouvé pour ce filtre.")
+        else:
+            self.view.display_contrats(contrats)
+
+        return contrats

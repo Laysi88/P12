@@ -49,3 +49,31 @@ class ContratView:
         new_status = True if new_status == "oui" else contrat.status
 
         return new_total_amount, new_remaining_amount, new_status
+
+    def display_contrats(self, contrats):
+        """Affiche une liste de contrats."""
+        if not contrats:
+            print("📭 Aucun contrat à afficher.")
+            return
+
+        print("\n📜 Liste des contrats :")
+        for contrat in contrats:
+            print(
+                f"🔹 ID: {contrat.id} | Client: {contrat.client.name} | Total: {contrat.total_amount}€ "
+                f"| Restant: {contrat.remaining_amount}€ | Signé: {'✅ Oui' if contrat.status else '❌ Non'}"
+            )
+
+    def ask_filter_option(self):
+        """Demande à l'utilisateur quel type de filtrage il veut appliquer."""
+        print("\n📌 Choisissez un filtre pour afficher les contrats :")
+        print("1️⃣ - Contrats non signés")
+        print("2️⃣ - Contrats non entièrement payés")
+
+        choix = input("👉 Entrez votre choix (1 ou 2) : ").strip()
+
+        if choix == "1":
+            return "non_signes"
+        elif choix == "2":
+            return "paiement_en_attente"
+        else:
+            return None
