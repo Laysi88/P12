@@ -73,6 +73,16 @@ def sample_user(role_gestion, mock_session):
 
 
 @pytest.fixture
+def sample_support(role_support, mock_session):
+    """Fixture qui retourne un utilisateur avec un rôle 'support'."""
+    user = User(name="Bob", email="bob@exemple.com", password="securepass", role_id=role_support.id)
+    mock_session.add(user)
+    mock_session.commit()
+    mock_session.refresh(user)
+    return user
+
+
+@pytest.fixture
 def sample_commercial(role_commercial, mock_session):
     """Fixture qui retourne un utilisateur avec un rôle 'commercial'."""
     user = User(name="Alice", email="alice@example.com", password="securepass", role_id=role_commercial.id)

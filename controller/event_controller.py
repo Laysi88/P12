@@ -64,3 +64,24 @@ class EventController(BaseController):
             self.view.display_events(events)
 
         return events
+
+    def filter_event(self):
+        """Filtrer les événements selon le rôle (support ou gestion)."""
+
+        if not self.check_permission("filter_event"):
+            self.view.display_error_message("❌ Accès refusé : Vous ne pouvez pas filtrer les événements.")
+            return []
+
+        events = []
+
+        if self.user.role.name == "support":
+            events = self.session.query(Event).filter_by(support_id=self.user.id).all()
+        elif self.user.role.name == "gestion":
+            events = self.session.query(Event).filter_by(support_id=None).all()
+
+        if not events:
+            self.view.display_info_message("📭 Aucun événement trouvé pour ce filtre.")
+        else:
+            self.view.display_events(events)
+
+        return events

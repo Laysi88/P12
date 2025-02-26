@@ -16,6 +16,26 @@ def event_controller(sample_commercial, monkeypatch, mock_session):
     return controller
 
 
+@pytest.fixture
+def event_controller_support(sample_support, monkeypatch, mock_session):
+    """Fixture pour un `EventController` avec un utilisateur support."""
+    monkeypatch.setattr("controller.event_controller.DBSession", lambda: mock_session)
+    controller = EventController(sample_support)
+    monkeypatch.setattr(controller.view, "display_info_message", lambda msg: print(msg))
+    monkeypatch.setattr(controller.view, "display_error_message", lambda msg: print(msg))
+    return controller
+
+
+@pytest.fixture
+def event_controller_gestion(sample_user, monkeypatch, mock_session):
+    """Fixture pour un `EventController` avec un utilisateur gestionnaire."""
+    monkeypatch.setattr("controller.event_controller.DBSession", lambda: mock_session)
+    controller = EventController(sample_user)
+    monkeypatch.setattr(controller.view, "display_info_message", lambda msg: print(msg))
+    monkeypatch.setattr(controller.view, "display_error_message", lambda msg: print(msg))
+    return controller
+
+
 def test_create_event_success(event_controller, sample_contrat, monkeypatch):
     """Test qu'un commercial peut créer un événement pour un contrat signé."""
 
@@ -166,3 +186,67 @@ def test_read_event_no_event(event_controller, monkeypatch):
 
     assert result == [], "Aucun événement ne doit être retourné s'il n'y en a pas."
     assert "📭 Aucun événement disponible." in info_message[0], "Le message d'information doit être affiché."
+
+
+def test_filter_event_as_support(event_controller_support, sample_event, monkeypatch):
+    """Test que le support ne voit que les événements qui lui sont attribués."""
+
+    sample_event.support_id = event_controller_support.user.id
+    event_controller_support.session.commit()
+
+    monkeypatch.setattr(
+        event_controller_support.session.query(Event),
+        "filter_by",
+        lambda support_id: [sample_event] if support_id == event_controller_support.user.id else [],
+    )
+
+    result = event_controller_support.filter_event()
+
+    assert result == [sample_event], "Le support doit voir uniquement ses événements."
+
+
+def test_filter_event_as_gestion(event_controller_gestion, sample_event, monkeypatch):
+    """Test que le gestionnaire ne voit que les événements sans support."""
+
+    sample_event.support_id = None
+    event_controller_gestion.session.commit()
+
+    monkeypatch.setattr(
+        event_controller_gestion.session.query(Event),
+        "filter_by",
+        lambda support_id: [sample_event] if support_id is None else [],
+    )
+
+    result = event_controller_gestion.filter_event()
+
+    assert result == [sample_event], "Le gestionnaire doit voir uniquement les événements sans support."
+
+
+def test_filter_event_no_permission(event_controller_support, monkeypatch):
+    """Test qu'un utilisateur sans permission ne peut pas filtrer les événements."""
+
+    monkeypatch.setattr(event_controller_support, "check_permission", lambda action: False)
+
+    error_message = []
+    monkeypatch.setattr(event_controller_support.view, "display_error_message", lambda msg: error_message.append(msg))
+
+    result = event_controller_support.filter_event()
+
+    assert result == [], "L'utilisateur sans permission ne doit voir aucun événement."
+    assert "❌ Accès refusé : Vous ne pouvez pas filtrer les événements." in error_message[0]
+
+
+def test_filter_event_no_event(event_controller_support, monkeypatch):
+    """Test qu'un message est affiché s'il n'y a aucun événement à filtrer."""
+
+    monkeypatch.setattr(event_controller_support.session.query(Event), "all", lambda: [])
+
+    info_message = []
+    monkeypatch.setattr(event_controller_support.view, "display_info_message", lambda msg: info_message.append(msg))
+
+    result = event_controller_support.filter_event()
+
+    assert result == [], "Aucun événement ne doit être retourné s'il n'y en a pas."
+    assert "📭 Aucun événement trouvé pour ce filtre." in info_message[0], (
+        "Le message d'information doit être affiché."
+    )

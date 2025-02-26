@@ -17,6 +17,7 @@ from model.role import Role
                 "read_contrat",
                 "filter_contrat",
                 "read_event",
+                "filter_event",
             },
         ),
         (
@@ -38,6 +39,7 @@ from model.role import Role
             "support",
             {
                 "read_event",
+                "filter_event",
             },
         ),
     ],
