@@ -48,3 +48,19 @@ class EventController(BaseController):
         self.session.commit()
         self.view.display_info_message(f"✅ Événement '{name}' créé avec succès pour le contrat {contrat_id} !")
         return new_event
+
+    def read_event(self):
+        """Lecture de tous les événements."""
+
+        if not self.check_permission("read_event"):
+            self.view.display_error_message("❌ Accès refusé : Vous ne pouvez pas lire un événement.")
+            return []
+
+        events = self.session.query(Event).all()
+
+        if not events:
+            self.view.display_info_message("📭 Aucun événement disponible.")
+        else:
+            self.view.display_events(events)
+
+        return events

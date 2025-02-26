@@ -16,6 +16,7 @@ from model.role import Role
                 "update_contrat",
                 "read_contrat",
                 "filter_contrat",
+                "read_event",
             },
         ),
         (
@@ -30,9 +31,15 @@ from model.role import Role
                 "read_contrat",
                 "filter_contrat",
                 "create_event",
+                "read_event",
             },
         ),
-        ("support", {}),
+        (
+            "support",
+            {
+                "read_event",
+            },
+        ),
     ],
 )
 def test_get_permissions(role_name, expected_permissions):

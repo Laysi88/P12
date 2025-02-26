@@ -17,6 +17,24 @@ class EventView:
         end_date = input("📆 Date de fin (YYYY-MM-DD HH:MM) : ").strip()
         location = input("📍 Lieu : ").strip()
         attendees = input("👥 Nombre de participants : ").strip()
+        support_id = input("📋 ID du support : ").strip()
         notes = input("📝 Notes (facultatif) : ").strip()
 
-        return name, start_date, end_date, location, int(attendees), notes if notes else None
+        return (
+            name,
+            start_date,
+            end_date,
+            location,
+            int(attendees),
+            support_id if support_id else None,
+            notes if notes else None,
+        )
+
+    def display_events(self, events):
+        """Affiche une liste d'événements."""
+        print("Liste des événements :")
+        for event in events:
+            print(
+                f"📅 {event.name} ({event.start_date} - {event.end_date}) - {event.location} - {event.attendees} participants -{event.notes} "
+            )
+        print("\n")

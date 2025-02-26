@@ -2,6 +2,7 @@ import pytest
 from controller.event_controller import EventController
 from model.contrat import Contrat
 from datetime import datetime
+from model.event import Event
 
 
 @pytest.fixture
@@ -124,3 +125,44 @@ def test_create_event_contrat_inexistant(event_controller, monkeypatch, mock_ses
     assert "⚠️ Contrat inexistant." in error_message[0], (
         "Le message d'erreur doit être affiché pour un contrat inexistant."
     )
+
+
+def test_read_event_success(event_controller, sample_event, monkeypatch):
+    """Test qu'un utilisateur peut lire tous les événements."""
+
+    monkeypatch.setattr(event_controller.session.query(Event), "all", lambda: [sample_event])
+
+    result = event_controller.read_event()
+
+    assert result == [sample_event], "Les événements doivent être retournés."
+    assert len(result) == 1, "Un seul événement doit être retourné."
+
+
+def test_read_event_permission_denied(event_controller, monkeypatch):
+    """Test qu'un utilisateur sans permission ne peut pas lire les événements."""
+
+    monkeypatch.setattr(event_controller, "check_permission", lambda action: False)
+
+    error_message = []
+    monkeypatch.setattr(event_controller.view, "display_error_message", lambda msg: error_message.append(msg))
+
+    result = event_controller.read_event()
+
+    assert result == [], "Aucun événement ne doit être retourné si l'accès est refusé."
+    assert "❌ Accès refusé : Vous ne pouvez pas lire un événement." in error_message[0], (
+        "Le message d'erreur doit être affiché."
+    )
+
+
+def test_read_event_no_event(event_controller, monkeypatch):
+    """Test qu'un message est affiché s'il n'y a aucun événement."""
+
+    monkeypatch.setattr(event_controller.session.query(Event), "all", lambda: [])
+
+    info_message = []
+    monkeypatch.setattr(event_controller.view, "display_info_message", lambda msg: info_message.append(msg))
+
+    result = event_controller.read_event()
+
+    assert result == [], "Aucun événement ne doit être retourné s'il n'y en a pas."
+    assert "📭 Aucun événement disponible." in info_message[0], "Le message d'information doit être affiché."
