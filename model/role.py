@@ -23,6 +23,7 @@ class Role(Base):
                 "filter_contrat",
                 "read_event",
                 "filter_event",
+                "update_event",
             },
             "commercial": {
                 "create_client",
@@ -39,6 +40,7 @@ class Role(Base):
             "support": {
                 "read_event",
                 "filter_event",
+                "update_event",
             },
         }
         return role_permissions.get(self.name, set())

@@ -250,3 +250,67 @@ def test_filter_event_no_event(event_controller_support, monkeypatch):
     assert "📭 Aucun événement trouvé pour ce filtre." in info_message[0], (
         "Le message d'information doit être affiché."
     )
+
+
+def test_update_event_assign_support(event_controller_gestion, sample_event, sample_support, monkeypatch):
+    """Test qu'un gestionnaire peut assigner un support à un événement."""
+
+    event_controller_gestion.user.role.name = "gestion"
+
+    monkeypatch.setattr(event_controller_gestion.view, "input_support_assignment", lambda: sample_support.id)
+
+    info_message = []
+    monkeypatch.setattr(event_controller_gestion.view, "display_info_message", lambda msg: info_message.append(msg))
+
+    event_controller_gestion.update_event(sample_event.id)
+
+    assert sample_event.support_id == sample_support.id, "Le support doit être attribué à l'événement."
+    assert info_message, "Un message de confirmation doit être affiché."
+    assert f"✅ Événement {sample_event.id} mis à jour avec succès !" in info_message[0]
+
+
+def test_update_event_update_note(event_controller_support, sample_event, monkeypatch):
+    """Test qu'un support peut mettre à jour les notes d'un événement."""
+
+    event_controller_support.user.role.name = "support"
+
+    new_notes = "Nouvelles notes"
+    monkeypatch.setattr(event_controller_support.view, "input_update_notes", lambda: new_notes)
+
+    info_message = []
+    monkeypatch.setattr(event_controller_support.view, "display_info_message", lambda msg: info_message.append(msg))
+
+    event_controller_support.update_event(sample_event.id)
+
+    assert sample_event.notes == "Nouvelles notes", "Les notes de l'événement doivent être mises à jour."
+    assert info_message, "Un message de confirmation doit être affiché."
+    assert f"✅ Événement {sample_event.id} mis à jour avec succès !" in info_message[0]
+
+
+def test_update_event_permission_denied(event_controller, sample_event, monkeypatch):
+    """Test qu'un utilisateur sans permission ne peut pas mettre à jour un événement."""
+
+    monkeypatch.setattr(event_controller, "check_permission", lambda action: False)
+
+    error_message = []
+    monkeypatch.setattr(event_controller.view, "display_error_message", lambda msg: error_message.append(msg))
+
+    event_controller.update_event(sample_event.id)
+
+    assert sample_event.support_id is None, "L'événement ne doit pas être mis à jour si l'accès est refusé."
+    assert "❌ Accès refusé : Vous ne pouvez pas modifier cet événement." in error_message[0], (
+        "Le message d'erreur doit être affiché."
+    )
+
+
+def test_update_event_inexistant(event_controller_gestion, monkeypatch):
+    """Test qu'un message est affiché si l'événement n'existe pas."""
+
+    error_message = []
+    monkeypatch.setattr(event_controller_gestion.view, "display_error_message", lambda msg: error_message.append(msg))
+
+    event_controller_gestion.update_event(999)
+
+    assert "⚠️ Événement inexistant." in error_message[0], (
+        "Le message d'erreur doit être affiché pour un événement inexistant."
+    )

@@ -38,3 +38,17 @@ class EventView:
                 f"📅 {event.name} ({event.start_date} - {event.end_date}) - {event.location} - {event.attendees} participants -{event.notes} "
             )
         print("\n")
+
+    def input_support_assignment(self):
+        """Demande à l'utilisateur d'entrer un ID de support."""
+        while True:
+            try:
+                support_id = int(input("👤 Entrez l'ID du collaborateur support à assigner : ").strip())
+                return support_id
+            except ValueError:
+                print("❌ Veuillez entrer un ID valide (nombre entier).")
+
+    def input_update_notes(self):
+        """Demande à l'utilisateur d'entrer des notes mises à jour."""
+        notes = input("📝 Entrez les nouvelles notes de l'événement : ").strip()
+        return notes if notes else None

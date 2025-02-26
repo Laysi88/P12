@@ -76,7 +76,7 @@ class EventController(BaseController):
 
         if self.user.role.name == "support":
             events = self.session.query(Event).filter_by(support_id=self.user.id).all()
-        elif self.user.role.name == "gestion":
+        if self.user.role.name == "gestion":
             events = self.session.query(Event).filter_by(support_id=None).all()
 
         if not events:
@@ -85,3 +85,28 @@ class EventController(BaseController):
             self.view.display_events(events)
 
         return events
+
+    def update_event(self, event_id):
+        """Met à jour un événement (gestion attribue un support, support met à jour les notes)."""
+
+        if not self.check_permission("update_event"):
+            self.view.display_error_message("❌ Accès refusé : Vous ne pouvez pas modifier cet événement.")
+            return None
+
+        event = self.session.query(Event).filter_by(id=event_id).first()
+
+        if not event:
+            self.view.display_error_message("⚠️ Événement inexistant.")
+            return None
+
+        if self.user.role.name == "gestion":
+            new_support_id = self.view.input_support_assignment()
+            event.support_id = new_support_id
+
+        if self.user.role.name == "support":
+            new_notes = self.view.input_update_notes()
+            event.notes = new_notes
+
+        self.session.commit()
+        self.view.display_info_message(f"✅ Événement {event.id} mis à jour avec succès !")
+        return event
