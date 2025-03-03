@@ -8,7 +8,7 @@ class Event(Base):
 
     id = Column(Integer, primary_key=True)
     name = Column(String(100), nullable=False)
-    contrat_id = Column(Integer, ForeignKey("contrats.id", ondelete="SET NULL"), nullable=False)
+    contrat_id = Column(Integer, ForeignKey("contrats.id", ondelete="SET NULL"))
     contrat = relationship("Contrat", back_populates="event")
     start_date = Column(DateTime, nullable=False)
     end_date = Column(DateTime, nullable=False)

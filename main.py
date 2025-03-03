@@ -1,15 +1,21 @@
-import sys
+from prompt_toolkit import prompt
+from rich.console import Console
 from controller.auth_controller import AuthController
 from controller.user_controller import UserController
-from controller.client_controller import ClientController
-from utils.populate_database import seed_admin_user, seed_roles
-from utils.config import Session
-from model.role import Role
-from model.user import User
+from controller.contrat_controller import ContratController
+from controller.event_controller import EventController
+from utils.config import Base, engine, Session
+from utils.populate_database import seed_roles, seed_admin_user
+import sys
+from model import Role, User
+
+console = Console()
+auth_controller = AuthController()
 
 
 def initialize_database():
     """Ajoute les rôles et l'admin s'ils n'existent pas encore."""
+    Base.metadata.create_all(engine)
     session = Session()
     if session.query(Role).count() == 0:
         print("📌 Création des rôles...")
@@ -25,80 +31,143 @@ def initialize_database():
     session.close()
 
 
-def main():
-    auth_controller = AuthController()
+def show_menu(user):
+    """Affiche le menu principal en fonction du rôle de l'utilisateur."""
+    console.print(f"\n🔐 [bold cyan]Connecté en tant que {user.name} - {user.role.name}[/bold cyan]")
+    console.print("[bold cyan]=== Menu Principal ===[/bold cyan]")
 
-    if len(sys.argv) > 1 and sys.argv[1] == "login":
-        auth_controller.login()
-        return
+    if user.role.name == "gestion":
+        console.print("1️⃣ [green]Gérer les utilisateurs[/green]")
+
+    if user.role.name in ["commercial", "gestion"]:
+        console.print("2️⃣ [blue]Gérer les contrats[/blue]")
+
+    if user.role.name in ["support", "gestion"]:
+        console.print("3️⃣ [magenta]Gérer les événements[/magenta]")
+
+    console.print("0️⃣ [red]Quitter[/red]")
+    console.print("🔑 [yellow]Logout (L)[/yellow]")
+
+
+def show_user_menu(user, user_controller):
+    """Affiche le menu pour la gestion des utilisateurs."""
+    console.print("[bold green]=== Gestion des utilisateurs ===[/bold green]")
+
+    if user.role.name == "commercial":
+        console.print("1️⃣ [blue]Créer un utilisateur[/blue]")
+    console.print("2️⃣ [cyan]Lister les utilisateurs[/cyan]")
+    console.print("3️⃣ [magenta]Modifier un utilisateur[/magenta]")
+    console.print("4️⃣ [red]Supprimer un utilisateur[/red]")
+    console.print("0️⃣ [yellow]Retour au menu principal[/yellow]")
+
+    while True:
+        sub_choix = prompt("👉 Choisissez une action : ").strip()
+
+        if sub_choix == "1":
+            user_controller.create_user()
+        elif sub_choix == "2":
+            user_controller.list_users()
+        elif sub_choix == "3":
+            user_controller.update_user()
+        elif sub_choix == "4":
+            user_controller.delete_user()
+        elif sub_choix == "0":
+            break
+        else:
+            console.print("[bold yellow]⚠ Option invalide, essayez encore ![/bold yellow]")
+
+
+def show_contrat_menu(user, contrat_controller):
+    """Affiche le menu pour la gestion des contrats."""
+    console.print("[bold blue]=== Gestion des contrats ===[/bold blue]")
+
+    console.print("1️⃣ [blue]Créer un contrat[/blue]")
+    console.print("2️⃣ [cyan]Lister les contrats[/cyan]")
+    console.print("3️⃣ [magenta]Modifier un contrat[/magenta]")
+    console.print("0️⃣ [yellow]Retour au menu principal[/yellow]")
+
+    while True:
+        sub_choix = prompt("👉 Choisissez une action : ").strip()
+
+        if sub_choix == "1":
+            contrat_controller.create_contrat()
+        elif sub_choix == "2":
+            contrat_controller.list_contrats()
+        elif sub_choix == "3":
+            contrat_controller.update_contrat()
+        elif sub_choix == "0":
+            break
+        else:
+            console.print("[bold yellow]⚠ Option invalide, essayez encore ![/bold yellow]")
+
+
+def show_event_menu(user, event_controller):
+    """Affiche le menu pour la gestion des événements."""
+    console.print("[bold magenta]=== Gestion des événements ===[/bold magenta]")
+
+    console.print("1️⃣ [blue]Créer un événement[/blue]")
+    console.print("2️⃣ [cyan]Lister les événements[/cyan]")
+    console.print("3️⃣ [magenta]Mettre à jour un événement[/magenta]")
+    console.print("0️⃣ [yellow]Retour au menu principal[/yellow]")
+
+    while True:
+        sub_choix = prompt("👉 Choisissez une action : ").strip()
+
+        if sub_choix == "1":
+            event_controller.create_event()
+        elif sub_choix == "2":
+            event_controller.list_events()
+        elif sub_choix == "3":
+            event_controller.update_event()
+        elif sub_choix == "0":
+            break
+        else:
+            console.print("[bold yellow]⚠ Option invalide, essayez encore ![/bold yellow]")
+
+
+def main():
+    if len(sys.argv) > 1:
+        if sys.argv[1] == "login":
+            auth_controller.login()
+            return
+        elif sys.argv[1] == "logout":
+            auth_controller.logout()
+            console.print("\n[bold yellow]🚪 Déconnexion réussie ![/bold yellow]")
+            return
 
     user = auth_controller.verify_token()
     if not user:
-        print("\n🔐 Connectez-vous d'abord avec `python epicevents.py login`")
+        console.print("\n🔐 Connectez-vous d'abord avec `python menu.py login`")
         return
 
     user_controller = UserController(user)
-    client_controller = ClientController(user)
+    contrat_controller = ContratController(user)
+    event_controller = EventController(user)
 
     while True:
-        print("\n--- Menu CRM EPICEVENT ---")
-        print("1️⃣ - Créer un utilisateur")
-        print("2️⃣ - Lister les utilisateurs")
-        print("3️⃣ - Modifier un utilisateur")
-        print("4️⃣ - Supprimer un utilisateur")
-        print("5️⃣ - Se déconnecter")
-        print("6️⃣ - Quitter")
-        print("7️⃣ - Créer un client")
-        print("8️⃣ - Lister les clients")
-        print("9️⃣ - Lister les clients personnels")
-        print("1️⃣0️⃣ - Modifier un client")
+        show_menu(user)
+        choix = prompt("👉 Choisissez une option : ").strip().lower()
 
-        choix = input("👉 Faites votre choix : ")
+        if choix == "1" and user.role.name == "gestion":
+            show_user_menu(user, user_controller)
 
-        if choix == "1":
-            user_controller.create_user()
-        elif choix == "2":
-            user_controller.list_users()
-        elif choix == "3":
-            while True:
-                try:
-                    user_id = int(input("ID de l'utilisateur à modifier : "))
-                    user_controller.update_user(user_id)
-                    break
-                except ValueError:
-                    print("❌ ID invalide, veuillez recommencer.")
-        elif choix == "4":
-            while True:
-                try:
-                    user_id = int(input("ID de l'utilisateur à supprimer : "))
-                    user_controller.delete_user(user_id)
-                    break
-                except ValueError:
-                    print("❌ ID invalide, veuillez recommencer.")
+        elif choix == "2" and user.role.name in ["commercial", "gestion"]:
+            show_contrat_menu(user, contrat_controller)
 
-        elif choix == "5":
+        elif choix == "3" and user.role.name in ["support", "gestion"]:
+            show_event_menu(user, event_controller)
+
+        elif choix == "0":
+            console.print("[bold red]👋 Au revoir ![/bold red]")
+            break
+
+        elif choix == "l":
             auth_controller.logout()
+            console.print("\n[bold yellow]🚪 Déconnexion réussie ![/bold yellow]")
             break
-        elif choix == "6":
-            print("👋 Au revoir !")
-            break
-        elif choix == "7":
-            client_controller.create_client()
-        elif choix == "8":
-            client_controller.list_all_client()
-        elif choix == "9":
-            client_controller.list_personnal_client()
-        elif choix == "10":
-            while True:
-                try:
-                    client_id = int(input("ID du client à modifier : "))
-                    client_controller.update_client(client_id)
-                    break
-                except ValueError:
-                    print("❌ ID invalide, veuillez recommencer.")
 
         else:
-            print("❌ Choix invalide, veuillez recommencer.")
+            console.print("[bold yellow]⚠ Option invalide, essayez encore ![/bold yellow]")
 
 
 if __name__ == "__main__":
