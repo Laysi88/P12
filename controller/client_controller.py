@@ -39,9 +39,9 @@ class ClientController(BaseController):
         return new_client
 
     def list_all_client(self):
-        """Liste tous les clients (réservé aux commerciaux)."""
+        """Liste tous les clients"""
         if not self.check_permission("read_client"):
-            self.view.display_error_message("❌ Accès refusé : Seuls les commerciaux peuvent lire les clients.")
+            self.view.display_error_message("❌ Accès refusé")
             return None
 
         clients = self.session.query(Client).all()
@@ -50,7 +50,7 @@ class ClientController(BaseController):
 
     def list_personnal_client(self):
         """Liste les clients personnels (réservé aux commerciaux)."""
-        if not self.check_permission("read_client"):
+        if not self.check_permission("read_client_personnal"):
             self.view.display_error_message("❌ Accès refusé : Seuls les commerciaux peuvent lire les clients.")
             return None
 

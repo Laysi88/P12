@@ -17,6 +17,7 @@ class Role(Base):
                 "read_user",
                 "update_user",
                 "delete_user",
+                "read_client",
                 "create_contrat",
                 "update_contrat",
                 "read_contrat",
@@ -29,6 +30,7 @@ class Role(Base):
                 "read_user",
                 "create_client",
                 "read_client",
+                "read_client_personnal",
                 "update_client",
                 "create_contrat",
                 "read_contrat",
@@ -40,6 +42,7 @@ class Role(Base):
             },
             "support": {
                 "read_user",
+                "read_client",
                 "read_event",
                 "filter_event",
                 "update_event",
