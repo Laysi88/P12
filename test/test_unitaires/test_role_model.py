@@ -24,6 +24,7 @@ from model.role import Role
         (
             "commercial",
             {
+                "read_user",
                 "create_client",
                 "read_client",
                 "update_client",
@@ -39,6 +40,7 @@ from model.role import Role
         (
             "support",
             {
+                "read_user",
                 "read_event",
                 "filter_event",
                 "update_event",

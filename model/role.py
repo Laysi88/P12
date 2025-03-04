@@ -26,6 +26,7 @@ class Role(Base):
                 "update_event",
             },
             "commercial": {
+                "read_user",
                 "create_client",
                 "read_client",
                 "update_client",
@@ -38,6 +39,7 @@ class Role(Base):
                 "read_event",
             },
             "support": {
+                "read_user",
                 "read_event",
                 "filter_event",
                 "update_event",

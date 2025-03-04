@@ -36,14 +36,9 @@ def show_menu(user):
     console.print(f"\n🔐 [bold cyan]Connecté en tant que {user.name} - {user.role.name}[/bold cyan]")
     console.print("[bold cyan]=== Menu Principal ===[/bold cyan]")
 
-    if user.role.name == "gestion":
-        console.print("1️⃣ [green]Gérer les utilisateurs[/green]")
-
-    if user.role.name in ["commercial", "gestion"]:
-        console.print("2️⃣ [blue]Gérer les contrats[/blue]")
-
-    if user.role.name in ["support", "gestion"]:
-        console.print("3️⃣ [magenta]Gérer les événements[/magenta]")
+    console.print("1️⃣ [green]Gérer les utilisateurs[/green]")
+    console.print("2️⃣ [blue]Gérer les contrats[/blue]")
+    console.print("3️⃣ [magenta]Gérer les événements[/magenta]")
 
     console.print("0️⃣ [red]Quitter[/red]")
     console.print("🔑 [yellow]Logout (L)[/yellow]")
@@ -53,11 +48,12 @@ def show_user_menu(user, user_controller):
     """Affiche le menu pour la gestion des utilisateurs."""
     console.print("[bold green]=== Gestion des utilisateurs ===[/bold green]")
 
-    if user.role.name == "commercial":
+    if user.role.name == "gestion":
         console.print("1️⃣ [blue]Créer un utilisateur[/blue]")
     console.print("2️⃣ [cyan]Lister les utilisateurs[/cyan]")
-    console.print("3️⃣ [magenta]Modifier un utilisateur[/magenta]")
-    console.print("4️⃣ [red]Supprimer un utilisateur[/red]")
+    if user.role.name == "gestion":
+        console.print("3️⃣ [magenta]Modifier un utilisateur[/magenta]")
+        console.print("4️⃣ [red]Supprimer un utilisateur[/red]")
     console.print("0️⃣ [yellow]Retour au menu principal[/yellow]")
 
     while True:
@@ -68,9 +64,21 @@ def show_user_menu(user, user_controller):
         elif sub_choix == "2":
             user_controller.list_users()
         elif sub_choix == "3":
-            user_controller.update_user()
+            while True:
+                try:
+                    user_id = int(prompt("👉 Entrez l'ID de l'utilisateur à modifier : ").strip())
+                    user_controller.update_user(user_id)
+                    break
+                except ValueError:
+                    console.print("[bold yellow]⚠ L'ID invalide,veuillez[/bold yellow]")
         elif sub_choix == "4":
-            user_controller.delete_user()
+            while True:
+                try:
+                    user_id = int(prompt("👉 Entrez l'ID de l'utilisateur à supprimer : ").strip())
+                    user_controller.delete_user(user_id)
+                    break
+                except ValueError:
+                    console.print("[bold yellow]⚠ L'ID invalide,veuillez[/bold yellow]")
         elif sub_choix == "0":
             break
         else:
@@ -148,13 +156,13 @@ def main():
         show_menu(user)
         choix = prompt("👉 Choisissez une option : ").strip().lower()
 
-        if choix == "1" and user.role.name == "gestion":
+        if choix == "1":
             show_user_menu(user, user_controller)
 
-        elif choix == "2" and user.role.name in ["commercial", "gestion"]:
+        elif choix == "2":
             show_contrat_menu(user, contrat_controller)
 
-        elif choix == "3" and user.role.name in ["support", "gestion"]:
+        elif choix == "3":
             show_event_menu(user, event_controller)
 
         elif choix == "0":
