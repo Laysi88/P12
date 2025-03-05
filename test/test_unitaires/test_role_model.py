@@ -13,6 +13,7 @@ from model.role import Role
                 "update_user",
                 "delete_user",
                 "read_client",
+                "read_contrat",
                 "create_contrat",
                 "update_contrat",
                 "read_contrat",
@@ -44,6 +45,7 @@ from model.role import Role
             {
                 "read_user",
                 "read_client",
+                "read_contrat",
                 "read_event",
                 "filter_event",
                 "update_event",

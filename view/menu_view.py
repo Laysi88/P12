@@ -10,9 +10,9 @@ def show_menu(user):
     console.print("[bold cyan]=== Menu Principal ===[/bold cyan]")
 
     console.print("1️⃣ [green]Gérer les utilisateurs[/green]")
-    console.print("2️⃣ [blue]Gérer les contrats[/blue]")
-    console.print("3️⃣ [magenta]Gérer les événements[/magenta]")
-    console.print("4️⃣ [purple]Gérer les clients[/purple]")
+    console.print("2️⃣ [purple]Gérer les clients[/purple]")
+    console.print("3️⃣ [blue]Gérer les contrats[/blue]")
+    console.print("4️⃣ [magenta]Gérer les événements[/magenta]")
 
     console.print("0️⃣ [red]Quitter[/red]")
     console.print("🔑 [yellow]Logout (L)[/yellow]")
@@ -79,11 +79,11 @@ def show_client_menu(user, controllers):
     while True:
         sub_choix = prompt("👉 Choisissez une action : ").strip()
 
-        if sub_choix == "1":
+        if sub_choix == "1" and user.role.name == "commercial":
             controllers["client"].create_client()
-        elif sub_choix == "2":
+        elif sub_choix == "2" and user.role.name == "commercial":
             controllers["client"].list_personnal_client()
-        elif sub_choix == "3":
+        elif sub_choix == "3" and user.role.name == "commercial":
             try:
                 client_id = int(prompt("👉 Entrez l'ID du client à modifier : ").strip())
                 controllers["client"].update_client(client_id)

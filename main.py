@@ -63,13 +63,13 @@ def main():
             show_user_menu(user, controllers)
 
         elif choix == "2":
-            show_contrat_menu(user, controllers)
+            show_client_menu(user, controllers)
 
         elif choix == "3":
-            show_event_menu(user, controllers)
+            show_contrat_menu(user, controllers)
 
         elif choix == "4":
-            show_client_menu(user, controllers)
+            show_event_menu(user, controllers)
 
         elif choix == "0":
             console.print("[bold red]👋 Au revoir ![/bold red]")
