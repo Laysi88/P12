@@ -43,17 +43,17 @@ class ContratView:
         print(f"📜 Statut actuel : {'✅ Signé' if contrat.status else '❌ Non signé'}")
 
         new_total_amount = None
+        new_status = contrat.status  # ✅ Ajout d'une valeur par défaut !
+
         if not contrat.status:
+            new_status = input("✍️ Signer le contrat ? (oui/non, laisser vide pour ne pas changer) : ").strip().lower()
+            new_status = True if new_status == "oui" else contrat.status
+
             new_total_amount = input("💰 Nouveau montant total (laisser vide pour ne pas changer) : ").strip()
             new_total_amount = float(new_total_amount) if new_total_amount else contrat.total_amount
 
         new_remaining_amount = input("💰 Nouveau montant restant (laisser vide pour ne pas changer) : ").strip()
         new_remaining_amount = float(new_remaining_amount) if new_remaining_amount else contrat.remaining_amount
-        if not contrat.status:
-            new_status = input("✍️ Signer le contrat ? (oui/non, laisser vide pour ne pas changer) : ").strip().lower()
-            new_status = True if new_status == "oui" else contrat.status
-        else:
-            new_status = contrat.status
 
         return new_total_amount, new_remaining_amount, new_status
 

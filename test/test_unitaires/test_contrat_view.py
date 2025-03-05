@@ -60,17 +60,40 @@ def test_input_update_contrat_info(contrat_view, mock_session, monkeypatch):
     mock_session.commit()
     mock_session.refresh(contrat)
 
-    inputs = iter(["12000", "3000", "oui"])
+    inputs = iter(["oui", "10000", "3000"])
     monkeypatch.setattr("builtins.input", lambda _: next(inputs))
 
     new_total, new_remaining, new_status = contrat_view.input_update_contrat_info(contrat)
 
-    assert new_total == 12000
+    assert new_total == 10000
     assert new_remaining == 3000
     assert new_status is True
 
 
-def test_input_contrat_info_invalid_id(contrat_view, mock_session, monkeypatch):
+def test_input_contrat_info_cancel(contrat_view, mock_session, monkeypatch, capsys):
+    """Test que input_contrat_info retourne None lorsque l'utilisateur appuie sur Entrée pour annuler."""
+
+    client = Client(name="Client Test", email="client@test.com")
+    mock_session.add(client)
+    mock_session.commit()
+    mock_session.refresh(client)
+
+    fake_clients = [client]
+
+    # ⚠ L'utilisateur appuie sur Entrée directement (input vide)
+    inputs = iter([""])
+    monkeypatch.setattr("builtins.input", lambda _: next(inputs))
+
+    result = contrat_view.input_contrat_info(fake_clients)
+
+    captured = capsys.readouterr()
+
+    # ✅ Vérification
+    assert result is None, "La fonction doit retourner None si l'utilisateur annule."
+    assert "🔙 Retour au menu précédent." in captured.out, "Le message de retour doit s'afficher."
+
+
+def test_input_contrat_info_invalid_id(contrat_view, mock_session, monkeypatch, capsys):
     """Test que input_contrat_info affiche un message d'erreur en cas d'ID invalide."""
 
     client = Client(name="Client Test", email="client@test.com")
@@ -80,18 +103,17 @@ def test_input_contrat_info_invalid_id(contrat_view, mock_session, monkeypatch):
 
     fake_clients = [client]
 
-    inputs = iter(["99", str(client.id), "10000", "5000"])
+    inputs = iter(["99", str(client.id), "10000", "5000"])  # ID 99 inexistant
     monkeypatch.setattr("builtins.input", lambda _: next(inputs))
-
-    error_message = []
-    monkeypatch.setattr("builtins.print", lambda msg: error_message.append(msg))
 
     contrat_view.input_contrat_info(fake_clients)
 
-    assert "❌ ID invalide. Veuillez entrer un ID existant." in error_message, "Le message d'erreur doit s'afficher."
+    captured = capsys.readouterr()
+
+    assert "❌ ID invalide." in captured.out, "Le message d'erreur doit s'afficher."
 
 
-def test_input_contrat_info_invalid_value(contrat_view, mock_session, monkeypatch):
+def test_input_contrat_info_invalid_value(contrat_view, mock_session, monkeypatch, capsys):
     """Test que input_contrat_info affiche un message d'erreur en cas de valeur non numérique."""
 
     client = Client(name="Client Test", email="client@test.com")
@@ -101,15 +123,14 @@ def test_input_contrat_info_invalid_value(contrat_view, mock_session, monkeypatc
 
     fake_clients = [client]
 
-    inputs = iter(["abc", str(client.id), "10000", "5000"])
+    inputs = iter(["1", str(client.id), "abc", "5000"])
     monkeypatch.setattr("builtins.input", lambda _: next(inputs))
-
-    error_message = []
-    monkeypatch.setattr("builtins.print", lambda msg: error_message.append(msg))
 
     contrat_view.input_contrat_info(fake_clients)
 
-    assert "❌ Veuillez entrer un nombre valide." in error_message, "Le message d'erreur doit s'afficher."
+    captured = capsys.readouterr()
+
+    assert "❌ Montant invalide." in captured.out, "Le message d'erreur doit s'afficher."
 
 
 def test_display_contrats(contrat_view, capsys, mock_session, sample_client):

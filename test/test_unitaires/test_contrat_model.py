@@ -50,7 +50,7 @@ def test_repr_contrat():
 
 def test_contrat_total_amount_negative(mock_session):
     """Test qu'un contrat ne peut pas avoir un montant total négatif."""
-    with pytest.raises(ValueError, match="total_amount ne peut pas être négatif."):
+    with pytest.raises(ValueError, match="Le montant ne peut pas être négatif."):
         contrat = Contrat(client_id=1, total_amount=-5000, remaining_amount=2000)
         mock_session.add(contrat)
         mock_session.commit()
@@ -58,7 +58,7 @@ def test_contrat_total_amount_negative(mock_session):
 
 def test_contrat_remaining_amount_negative(mock_session):
     """Test qu'un contrat ne peut pas avoir un montant restant négatif."""
-    with pytest.raises(ValueError, match="remaining_amount ne peut pas être négatif."):
+    with pytest.raises(ValueError, match="Le montant ne peut pas être négatif."):
         contrat = Contrat(client_id=1, total_amount=5000, remaining_amount=-1000)
         mock_session.add(contrat)
         mock_session.commit()

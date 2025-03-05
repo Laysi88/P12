@@ -42,6 +42,18 @@ def test_create_contrat_success(contrat_controller, sample_client, monkeypatch):
     assert f"✅ Contrat créé avec succès pour le client {sample_client.name} !" in info_message[0]
 
 
+def test_create_contrat_cancelled(contrat_controller, sample_client, monkeypatch):
+    """Test que la création de contrat est annulée proprement si l'utilisateur appuie sur Entrée."""
+
+    contrat_controller.session.add(sample_client)
+    contrat_controller.session.commit()
+
+    monkeypatch.setattr("builtins.input", lambda _: "")
+
+    result = contrat_controller.create_contrat()
+    assert result is None, "La création du contrat doit être annulée et ne rien retourner."
+
+
 def test_create_contrat_as_gestionnaire(contrat_controller, sample_client, sample_user, monkeypatch):
     """Test qu'un gestionnaire peut créer un contrat pour n'importe quel client."""
 

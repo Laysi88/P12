@@ -74,8 +74,8 @@ class ContratController(BaseController):
 
         if not contrat.status:
             contrat.total_amount = new_total_amount
+            contrat.status = new_status
         contrat.remaining_amount = new_remaining_amount
-        contrat.status = new_status
 
         self.session.commit()
 
