@@ -3,6 +3,7 @@ from model.user import User
 from model.role import Role
 from view.user_view import UserView
 from controller.base_controller import BaseController
+import sentry_sdk
 
 
 class UserController(BaseController):
@@ -28,6 +29,7 @@ class UserController(BaseController):
         new_user = self.model(name=name, email=email, password=password, role_id=role.id)
         self.session.add(new_user)
         self.session.commit()
+        sentry_sdk.capture_message(f"👤 Nouvel utilisateur créé : {new_user.name} ({new_user.email})", level="info")
         self.view.display_info_message(f"✅ Utilisateur '{name}' créé avec succès !")
         return new_user
 
@@ -41,6 +43,9 @@ class UserController(BaseController):
             self.session.delete(user_to_delete)
             self.session.commit()
             self.view.display_info_message(f"✅ Utilisateur {user_id} supprimé !")
+            sentry_sdk.capture_message(
+                f"👤 Utilisateur supprimé : {user_to_delete.name} ({user_to_delete.email})", level="info"
+            )
         else:
             self.view.display_error_message(f"⚠️ L'utilisateur {user_id} n'existe pas.")
 
@@ -83,4 +88,5 @@ class UserController(BaseController):
         if password:
             user.password = user.set_password(password)
         self.session.commit()
+        sentry_sdk.capture_message(f"👤 Utilisateur mis à jour : {user.name} ({user.email})", level="info")
         self.view.display_info_message(f"✅ Utilisateur {user_id} mis à jour !")

@@ -10,6 +10,7 @@ from utils.populate_database import seed_roles, seed_admin_user
 import sys
 from model import Role, User
 from view.menu_view import show_menu, show_user_menu, show_client_menu, show_contrat_menu, show_event_menu
+import sentry_sdk
 
 console = Console()
 auth_controller = AuthController()
@@ -85,5 +86,12 @@ def main():
 
 
 if __name__ == "__main__":
-    initialize_database()
-    main()
+    try:
+        sentry_sdk.set_context("CLI Command", {"command": " ".join(sys.argv) if sys.argv else "Menu principal"})
+
+        initialize_database()
+        main()
+
+    except Exception as e:
+        sentry_sdk.capture_exception(e)
+        console.print(f"[bold red]🚨 Une erreur s'est produite : {e}[/bold red]")
