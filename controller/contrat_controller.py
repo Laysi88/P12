@@ -29,7 +29,10 @@ class ContratController(BaseController):
         if not clients:
             self.view.display_error_message("⚠️ Aucun client disponible.")
             return None
-        client_id, total_amount, remaining_amount = self.view.input_contrat_info(clients)
+        result = self.view.input_contrat_info(clients)
+        if result is None:
+            return
+        client_id, total_amount, remaining_amount = result
         client = self.session.query(Client).filter_by(id=client_id).first()
         if not client:
             self.view.display_error_message("⚠️ Client inexistant.")
@@ -100,7 +103,7 @@ class ContratController(BaseController):
     def filter_contrats(self):
         """Permet à l'utilisateur de filtrer les contrats (non signés ou avec paiement en attente)."""
 
-        if not self.check_permission("view_contrats"):
+        if not self.check_permission("filter_contrat"):
             self.view.display_error_message("❌ Accès refusé : Vous n'avez pas la permission d'afficher les contrats.")
             return []
 

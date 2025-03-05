@@ -38,7 +38,7 @@ class Contrat(Base):
     def validate_amounts(self, key, value):
         """Empêche les montants négatifs et le montant restant supérieur au total."""
         if value < 0:
-            raise ValueError(f"{key} ne peut pas être négatif.")
+            raise ValueError("Le montant ne peut pas être négatif.")
         if key == "remaining_amount" and value > self.total_amount:
             raise ValueError("Le montant restant ne peut pas dépasser le montant total.")
         return value

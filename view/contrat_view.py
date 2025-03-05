@@ -14,20 +14,25 @@ class ContratView:
         for client in clients:
             print(f"- {client.id}: {client.name} ({client.email})")
 
-        while True:
-            try:
-                client_id = int(input("\n🆔 Entrez l'ID du client : ").strip())
-                if any(client.id == client_id for client in clients):
-                    break
-                else:
-                    print("❌ ID invalide. Veuillez entrer un ID existant.")
-            except ValueError:
-                print("❌ Veuillez entrer un nombre valide.")
+        user_input = input("\n🆔 Entrez l'ID du client (ou appuyez sur Entrée pour annuler) : ").strip()
 
-        total_amount = float(input("💰 Montant total (€) : ").strip())
-        remaining_amount = float(input("💰 Montant restant (€) : ").strip())
+        if not user_input:  # ➜ Si vide, on annule immédiatement
+            print("🔙 Retour au menu précédent.")
+            return None
 
-        return client_id, total_amount, remaining_amount
+        if not user_input.isdigit() or int(user_input) not in [c.id for c in clients]:
+            print("❌ ID invalide.")
+            return None  # ➜ Quitte immédiatement en cas d'ID invalide
+
+        client_id = int(user_input)
+
+        try:
+            total_amount = float(input("💰 Montant total (€) : ").strip())
+            remaining_amount = float(input("💰 Montant restant (€) : ").strip())
+            return client_id, total_amount, remaining_amount
+        except ValueError:
+            print("❌ Montant invalide.")
+            return None
 
     def input_update_contrat_info(self, contrat):
         """Demande à l'utilisateur de saisir les nouvelles infos du contrat."""
@@ -44,9 +49,11 @@ class ContratView:
 
         new_remaining_amount = input("💰 Nouveau montant restant (laisser vide pour ne pas changer) : ").strip()
         new_remaining_amount = float(new_remaining_amount) if new_remaining_amount else contrat.remaining_amount
-
-        new_status = input("✍️ Signer le contrat ? (oui/non, laisser vide pour ne pas changer) : ").strip().lower()
-        new_status = True if new_status == "oui" else contrat.status
+        if not contrat.status:
+            new_status = input("✍️ Signer le contrat ? (oui/non, laisser vide pour ne pas changer) : ").strip().lower()
+            new_status = True if new_status == "oui" else contrat.status
+        else:
+            new_status = contrat.status
 
         return new_total_amount, new_remaining_amount, new_status
 

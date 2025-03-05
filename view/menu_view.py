@@ -100,21 +100,30 @@ def show_client_menu(user, controllers):
 def show_contrat_menu(user, controllers):
     """Affiche le menu pour la gestion des contrats."""
     console.print("[bold blue]=== Gestion des contrats ===[/bold blue]")
-
-    console.print("1️⃣ [blue]Créer un contrat[/blue]")
+    if user.role.name == "commercial":
+        console.print("1️⃣ [blue]Créer un contrat[/blue]")
     console.print("2️⃣ [cyan]Lister les contrats[/cyan]")
-    console.print("3️⃣ [magenta]Modifier un contrat[/magenta]")
+    if user.role.name == "commercial" or user.role.name == "gestion":
+        console.print("3️⃣ [magenta]Modifier un contrat[/magenta]")
+        console.print("4️⃣ [magenta]Filtrer les contrats[/magenta]")
     console.print("0️⃣ [yellow]Retour au menu principal[/yellow]")
 
     while True:
         sub_choix = prompt("👉 Choisissez une action : ").strip()
 
-        if sub_choix == "1":
+        if sub_choix == "1" and user.role.name == "commercial":
             controllers["contrat"].create_contrat()
         elif sub_choix == "2":
-            controllers["contrat"].list_contrats()
-        elif sub_choix == "3":
-            controllers["contrat"].update_contrat()
+            controllers["contrat"].read_contrat()
+        elif sub_choix == "3" and user.role.name in ["commercial", "gestion"]:
+            contrat_id = int(prompt("👉 Entrez l'ID du contrat à modifier : ").strip())
+            try:
+                controllers["contrat"].update_contrat(contrat_id)
+            except ValueError as ve:
+                console.print(f"[bold red]🚨 Erreur : {ve}[/bold red]")
+
+        elif sub_choix == "4" and user.role.name == "commercial" or user.role.name == "gestion":
+            controllers["contrat"].filter_contrats()
         elif sub_choix == "0":
             break
         else:
