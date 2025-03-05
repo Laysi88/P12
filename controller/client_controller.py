@@ -2,6 +2,7 @@ from model.client import Client
 from view.client_view import ClientView
 from controller.base_controller import BaseController
 from utils.config import Session as DBSession
+import sentry_sdk
 
 
 class ClientController(BaseController):
@@ -34,6 +35,8 @@ class ClientController(BaseController):
 
         self.session.add(new_client)
         self.session.commit()
+
+        sentry_sdk.capture_message(f"Client '{name}' créé par {self.user.name}.", level="info")
 
         self.view.display_info_message(f"✅ Client '{name}' créé et attribué à {self.user.name}.")
         return new_client
@@ -82,4 +85,7 @@ class ClientController(BaseController):
         client.company = company if company else client.company
 
         self.session.commit()
+
+        sentry_sdk.capture_message(f"Client {client_id} mis à jour.", level="info")
+
         self.view.display_info_message(f"✅ Client {client_id} mis à jour !")

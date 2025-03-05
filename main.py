@@ -91,6 +91,8 @@ if __name__ == "__main__":
 
         initialize_database()
         main()
+    except KeyboardInterrupt:
+        sys.exit(0)
 
     except Exception as e:
         sentry_sdk.capture_exception(e)

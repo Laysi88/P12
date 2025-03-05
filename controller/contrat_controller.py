@@ -3,6 +3,7 @@ from model.client import Client
 from controller.base_controller import BaseController
 from utils.config import Session as DBSession
 from view.contrat_view import ContratView
+import sentry_sdk
 
 
 class ContratController(BaseController):
@@ -44,6 +45,9 @@ class ContratController(BaseController):
         )
         self.session.add(new_contrat)
         self.session.commit()
+
+        sentry_sdk.capture_message(f"Contrat créé pour {client.name}.", level="info")
+
         self.view.display_info_message(f"✅ Contrat créé avec succès pour le client {client.name} !")
         return new_contrat
 
@@ -63,7 +67,6 @@ class ContratController(BaseController):
         if self.user.role.name == "commercial" and contrat.client.commercial_id != self.user.id:
             self.view.display_error_message("⚠️ Vous ne pouvez modifier que les contrats de vos propres clients.")
             return None
-
         new_total_amount, new_remaining_amount, new_status = self.view.input_update_contrat_info(contrat)
 
         if not contrat.status:
@@ -72,6 +75,9 @@ class ContratController(BaseController):
         contrat.status = new_status
 
         self.session.commit()
+
+        sentry_sdk.capture_message(f"Contrat {contrat.id} mis à jour.", level="info")
+
         self.view.display_info_message(f"✅ Contrat {contrat.id} mis à jour avec succès !")
         return contrat
 

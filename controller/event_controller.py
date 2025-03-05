@@ -3,6 +3,7 @@ from model.event import Event
 from model.contrat import Contrat
 from view.event_view import EventView
 from utils.config import Session as DBSession
+import sentry_sdk
 
 
 class EventController(BaseController):
@@ -46,6 +47,10 @@ class EventController(BaseController):
 
         self.session.add(new_event)
         self.session.commit()
+        sentry_sdk.capture_message(
+            f"📅 Nouvel événement créé : {new_event.name} ({new_event.start_date} - {new_event.end_date})",
+            level="info",
+        )
         self.view.display_info_message(f"✅ Événement '{name}' créé avec succès pour le contrat {contrat_id} !")
         return new_event
 
@@ -108,5 +113,8 @@ class EventController(BaseController):
             event.notes = new_notes
 
         self.session.commit()
+        sentry_sdk.capture_message(
+            f"📅 Événement mis à jour : {event.name} ({event.start_date} - {event.end_date})", level="info"
+        )
         self.view.display_info_message(f"✅ Événement {event.id} mis à jour avec succès !")
         return event
