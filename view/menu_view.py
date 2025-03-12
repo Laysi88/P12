@@ -133,22 +133,26 @@ def show_contrat_menu(user, controllers):
 def show_event_menu(user, controllers):
     """Affiche le menu pour la gestion des événements."""
     console.print("[bold magenta]=== Gestion des événements ===[/bold magenta]")
+    if user.role.name == "commercial":
+        console.print("1️⃣ [blue]Créer un événement[/blue]")
 
-    console.print("1️⃣ [blue]Créer un événement[/blue]")
     console.print("2️⃣ [cyan]Lister les événements[/cyan]")
-    console.print("3️⃣ [magenta]Mettre à jour un événement[/magenta]")
+    if user.role.name == "support" or user.role.name == "gestion":
+        console.print("3️⃣ [magenta]Mettre à jour un événement[/magenta]")
+        console.print("4️⃣ [magenta]Filtrer les événements[/magenta]")
+
     console.print("0️⃣ [yellow]Retour au menu principal[/yellow]")
 
     while True:
         sub_choix = prompt("👉 Choisissez une action : ").strip()
 
-        if sub_choix == "1":
+        if sub_choix == "1" and user.role.name == "commercial":
             controllers["event"].create_event()
         elif sub_choix == "2":
             controllers["event"].read_event()
-        elif sub_choix == "3":
+        elif sub_choix == "3" and user.role.name in ["support", "gestion"]:
             controllers["event"].update_event()
-        elif sub_choix == "4":
+        elif sub_choix == "4" and user.role.name in ["support", "gestion"]:
             controllers["event"].filter_event()
         elif sub_choix == "0":
             break
