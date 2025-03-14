@@ -1,5 +1,7 @@
 import pytest
 from view.auth_view import AuthView
+from prompt_toolkit.input.defaults import create_pipe_input
+from prompt_toolkit.output.defaults import DummyOutput
 
 
 @pytest.fixture
@@ -8,15 +10,18 @@ def auth_view():
     return AuthView()
 
 
-def test_prompt_credentials(auth_view, monkeypatch):
-    """Test que prompt_credentials() récupère bien les identifiants."""
+def test_prompt_credentials_with_prompt_toolkit(auth_view, monkeypatch):
+    """Test que `prompt_toolkit.prompt()` est bien exécuté sans erreur dans un environnement de test avec `monkeypatch`."""
 
-    inputs = iter(["user@example.com", "securepass"])
-    monkeypatch.setattr("builtins.input", lambda _: next(inputs))
+    monkeypatch.setattr("builtins.input", lambda _: "user@example.com")
+    monkeypatch.setattr("prompt_toolkit.shortcuts.PromptSession.prompt", lambda *args, **kwargs: "securepass")
+    monkeypatch.setattr("prompt_toolkit.input.defaults.create_input", lambda: create_pipe_input())
+    monkeypatch.setattr("prompt_toolkit.output.defaults.create_output", lambda: DummyOutput())
+
     email, password = auth_view.prompt_credentials()
 
     assert email == "user@example.com", "L'email saisi doit être retourné."
-    assert password == "securepass", "Le mot de passe saisi doit être retourné."
+    assert password == "securepass", "Le mot de passe doit être retourné correctement."
 
 
 def test_display_success_message(auth_view, capsys):
