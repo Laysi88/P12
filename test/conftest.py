@@ -2,6 +2,7 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from model import Role, User, Client, Event, Contrat  # noqa: F401
+from controller import UserController, ClientController, ContratController, EventController
 from utils.config import Base
 from datetime import datetime
 
@@ -145,3 +146,15 @@ def sample_event(sample_contrat, mock_session):
     mock_session.commit()
     mock_session.refresh(event)
     return event
+
+
+@pytest.fixture
+def sample_controller(sample_user):
+    """Fixture pour initialiser un objet Controller."""
+    controllers = {
+        "user": UserController(sample_user),
+        "client": ClientController(sample_user),
+        "contrat": ContratController(sample_user),
+        "event": EventController(sample_user),
+    }
+    return controllers

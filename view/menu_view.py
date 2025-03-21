@@ -40,11 +40,19 @@ def show_user_menu(user, controllers):
         elif sub_choix == "2":
             controllers["user"].list_users()
         elif sub_choix == "3":
-            try:
-                user_id = int(prompt("👉 Entrez l'ID de l'utilisateur : ").strip())
-                controllers["user"].get_user_details(user_id)
-            except ValueError:
-                console.print("[bold yellow]⚠ ID invalide, veuillez entrer un nombre.[/bold yellow]")
+            while True:
+                try:
+                    user_id = input("👉 Entrez l'ID de l'utilisateur (ou 0 pour revenir) : ").strip()
+                    if user_id == "0":
+                        break
+
+                    user_id = int(user_id)
+                    controllers["user"].get_user_details(user_id)
+                    break
+
+                except ValueError:
+                    console.print("[bold yellow]⚠ ID invalide, veuillez entrer un nombre.[/bold yellow]")
+                    break
 
         elif sub_choix in ["4", "5"] and user.role.name == "gestion":
             action = "modifier" if sub_choix == "4" else "supprimer"
