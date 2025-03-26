@@ -80,7 +80,6 @@ def test_input_contrat_info_cancel(contrat_view, mock_session, monkeypatch, caps
 
     fake_clients = [client]
 
-    # ⚠ L'utilisateur appuie sur Entrée directement (input vide)
     inputs = iter([""])
     monkeypatch.setattr("builtins.input", lambda _: next(inputs))
 
@@ -88,7 +87,6 @@ def test_input_contrat_info_cancel(contrat_view, mock_session, monkeypatch, caps
 
     captured = capsys.readouterr()
 
-    # ✅ Vérification
     assert result is None, "La fonction doit retourner None si l'utilisateur annule."
     assert "🔙 Retour au menu précédent." in captured.out, "Le message de retour doit s'afficher."
 
@@ -103,7 +101,7 @@ def test_input_contrat_info_invalid_id(contrat_view, mock_session, monkeypatch, 
 
     fake_clients = [client]
 
-    inputs = iter(["99", str(client.id), "10000", "5000"])  # ID 99 inexistant
+    inputs = iter(["99", str(client.id), "10000", "5000"])
     monkeypatch.setattr("builtins.input", lambda _: next(inputs))
 
     contrat_view.input_contrat_info(fake_clients)

@@ -62,7 +62,7 @@ def test_create_client_permission_denied(client_controller, monkeypatch):
 
 def test_list_all_clients_as_commercial(client_controller, mock_session):
     """Test qu'un commercial peut voir tous les clients."""
-    # 🔹 Création de clients fictifs
+
     client1 = Client(name="Client A", email="clientA@business.com", phone="0101010101", company="Company A")
     client2 = Client(name="Client B", email="clientB@business.com", phone="0202020202", company="Company B")
 
@@ -86,7 +86,7 @@ def test_list_all_clients_as_permission_denied(client_controller, monkeypatch):
 
 def test_list_personnal_clients(client_controller, mock_session, sample_commercial):
     """Test qu'un commercial peut voir ses clients personnels."""
-    # 🔹 Création de clients fictifs
+
     client1 = Client(
         name="Client A",
         email="clientA@business.com",
@@ -119,7 +119,6 @@ def test_list_personnal_clients_as_permission_denied(client_controller, monkeypa
 def test_update_client(client_controller, mock_session, sample_commercial, monkeypatch):
     """Test que update_client() met à jour les informations d'un client."""
 
-    # 🔹 Création d'un client fictif
     client = Client(
         name="Old Name",
         email="old@email.com",
@@ -130,18 +129,14 @@ def test_update_client(client_controller, mock_session, sample_commercial, monke
     mock_session.add(client)
     mock_session.commit()
 
-    # 🔹 Simuler l'entrée utilisateur pour mise à jour
     monkeypatch.setattr(
         client_controller.view, "input_client_info", lambda: ("New Name", "new@email.com", "0202020202", "New Company")
     )
 
-    # 🎯 Exécuter la méthode
     client_controller.update_client(client.id)
 
-    # 🎯 Recharger le client mis à jour depuis la base
     updated_client = mock_session.query(Client).filter_by(id=client.id).first()
 
-    # ✅ Vérifications
     assert updated_client.name == "New Name"
     assert updated_client.email == "new@email.com"
     assert updated_client.phone == "0202020202"
@@ -151,17 +146,16 @@ def test_update_client(client_controller, mock_session, sample_commercial, monke
 def test_update_client_not_found(client_controller, mock_session, capsys):
     """Test que update_client() affiche une erreur si le client n'existe pas."""
 
-    client_id = 999  # ID inexistant
+    client_id = 999
     client_controller.update_client(client_id)
 
     captured = capsys.readouterr()
-    assert "⚠️ Client inexistant." in captured.out  # ✅ Vérifie bien que ce texte est identique à celui du contrôleur
+    assert "⚠️ Client inexistant." in captured.out
 
 
 def test_update_client_email_already_used(client_controller, mock_session, sample_commercial, monkeypatch, capsys):
     """Test que update_client() refuse un email déjà utilisé."""
 
-    # 🔹 Création de deux clients
     client1 = Client(
         name="Client A",
         email="email@used.com",
@@ -180,7 +174,6 @@ def test_update_client_email_already_used(client_controller, mock_session, sampl
     mock_session.add_all([client1, client2])
     mock_session.commit()
 
-    # 🔹 Simuler une tentative de mise à jour avec un email existant
     monkeypatch.setattr(
         client_controller.view,
         "input_client_info",
@@ -196,7 +189,6 @@ def test_update_client_email_already_used(client_controller, mock_session, sampl
 def test_update_client_empty_fields(client_controller, mock_session, sample_commercial, monkeypatch):
     """Test que update_client() conserve les valeurs si on ne renseigne pas tous les champs."""
 
-    # 🔹 Création d'un client fictif
     client = Client(
         name="Old Name",
         email="old@email.com",
@@ -207,19 +199,15 @@ def test_update_client_empty_fields(client_controller, mock_session, sample_comm
     mock_session.add(client)
     mock_session.commit()
 
-    # 🔹 Simuler l'entrée utilisateur avec des valeurs vides
     monkeypatch.setattr(client_controller.view, "input_client_info", lambda: ("", "", "", "New Company"))
 
-    # 🎯 Exécuter la méthode
     client_controller.update_client(client.id)
 
-    # 🎯 Recharger le client mis à jour depuis la base
     updated_client = mock_session.query(Client).filter_by(id=client.id).first()
 
-    # ✅ Vérifications
-    assert updated_client.name == "Old Name"  # Ne doit pas changer
-    assert updated_client.email == "old@email.com"  # Ne doit pas changer
-    assert updated_client.phone == "0101010101"  # Ne doit pas changer
+    assert updated_client.name == "Old Name"
+    assert updated_client.email == "old@email.com"
+    assert updated_client.phone == "0101010101"
     assert updated_client.company == "New Company"
 
 

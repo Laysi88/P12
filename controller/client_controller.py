@@ -69,14 +69,14 @@ class ClientController(BaseController):
 
         client = self.session.query(Client).filter_by(id=client_id).first()
         if not client:
-            self.view.display_error_message("⚠️ Client inexistant.")  # ✅ Correction ici
+            self.view.display_error_message("⚠️ Client inexistant.")
             return None
 
         name, email, phone, company = self.view.input_client_info()
 
         existing_client = self.session.query(Client).filter(Client.email == email, Client.id != client_id).first()
         if existing_client:
-            self.view.display_error_message("⚠️ Email déjà utilisé.")  # ✅ Correction ici
+            self.view.display_error_message("⚠️ Email déjà utilisé.")
             return None
 
         client.name = name if name else client.name

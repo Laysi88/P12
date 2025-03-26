@@ -130,7 +130,7 @@ def show_contrat_menu(user, controllers):
             except ValueError as ve:
                 console.print(f"[bold red]🚨 Erreur : {ve}[/bold red]")
 
-        elif sub_choix == "4" and user.role.name == "commercial" or user.role.name == "gestion":
+        elif sub_choix == "4" and user.role.name in ["commercial", "gestion"]:
             controllers["contrat"].filter_contrats()
         elif sub_choix == "0":
             break

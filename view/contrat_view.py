@@ -16,13 +16,13 @@ class ContratView:
 
         user_input = input("\n🆔 Entrez l'ID du client (ou appuyez sur Entrée pour annuler) : ").strip()
 
-        if not user_input:  # ➜ Si vide, on annule immédiatement
+        if not user_input:
             print("🔙 Retour au menu précédent.")
             return None
 
         if not user_input.isdigit() or int(user_input) not in [c.id for c in clients]:
             print("❌ ID invalide.")
-            return None  # ➜ Quitte immédiatement en cas d'ID invalide
+            return None
 
         client_id = int(user_input)
 
@@ -43,7 +43,7 @@ class ContratView:
         print(f"📜 Statut actuel : {'✅ Signé' if contrat.status else '❌ Non signé'}")
 
         new_total_amount = None
-        new_status = contrat.status  # ✅ Ajout d'une valeur par défaut !
+        new_status = contrat.status
 
         if not contrat.status:
             new_status = input("✍️ Signer le contrat ? (oui/non, laisser vide pour ne pas changer) : ").strip().lower()
