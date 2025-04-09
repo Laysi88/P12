@@ -46,7 +46,7 @@ def main():
 
     user = auth_controller.verify_token()
     if not user:
-        console.print("\n🔐 Connectez-vous d'abord avec `python menu.py login`")
+        console.print("\n🔐 Connectez-vous d'abord avec `python main.py login`")
         return
 
     controllers = {
